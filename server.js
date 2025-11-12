@@ -1,5 +1,6 @@
 const express = require('express')
 const cookieParser = require('cookie-parser')
+const connectDB = require("./db");
 require('dotenv').config()
 const app = express()
 
@@ -12,6 +13,8 @@ const adminRotes = require('./Routes/adminRoutes')
 app.use(express.static("public"))
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
+
+connectDB();
 
 
 

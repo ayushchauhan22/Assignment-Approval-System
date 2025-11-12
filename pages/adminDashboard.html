@@ -1,139 +1,191 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Admin Dashboard</title>
-<style>
-  body {
-    font-family: Arial, sans-serif;
-    margin: 0;
-    background-color: #fafafa;
-    color: #253237;
-  }
-  header {
-    padding: 16px 24px;
-    border-bottom: 1px solid #eaeaea;
-    font-weight: 700;
-    font-size: 1.25rem;
-  }
-  .container {
-    display: flex;
-    min-height: calc(100vh - 107px); /* full height except header and footer */
-  }
-  nav {
-    width: 200px;
-    background-color: #fafafa;
-    border-right: 1px solid #eaeaea;
-    padding: 24px 20px;
-  }
-  nav h3 {
-    font-weight: 700;
-    font-size: 1rem;
-    margin-bottom: 16px;
-  }
-  nav button {
-    display: block;
-    width: 100%;
-    background: #e6e6e6;
-    border: none;
-    padding: 10px 16px;
-    margin-bottom: 12px;
-    border-radius: 8px;
-    font-size: 0.9rem;
-    text-align: left;
-    cursor: pointer;
-    color: #253237;
-  }
-  nav button:hover {
-    background-color: #d4d4d4;
-  }
 
-  main {
-    flex-grow: 1;
-    padding: 24px 36px;
-    background: #fff;
-  }
-  main h2 {
-    font-weight: 700;
-    margin-bottom: 24px;
-  }
-  .cards {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 18px 18px;
-    max-width: 480px;
-  }
-  .card {
-    border-radius: 10px;
-    padding: 24px 20px 28px;
-    font-size: 0.9rem;
-    box-sizing: border-box;
-  }
-  .card > div:first-child {
-    color: #536471;
-    margin-bottom: 12px;
-  }
-  .card strong {
-    font-weight: 900;
-    font-size: 1.75rem;
-  }
-  .card.departments {
-    background: #dbe8f9;
-    color: #253237;
-  }
-  .card.students {
-    background: #d9eddc;
-    color: #253237;
-  }
-  .card.professors {
-    background: #fbeedd;
-    color: #253237;
-  }
-  .card.hods {
-    background: #f3e8f9;
-    color: #253237;
-  }
-  footer {
-    font-size: 0.875rem;
-    color: #536471;
-    padding: 12px 24px;
-    text-align: center;
-    border-top: 1px solid #eaeaea;
-  }
-</style>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Admin Dashboard</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      background-color: #fafafa;
+      color: #253237;
+    }
+
+    header {
+      padding: 16px 24px;
+      border-bottom: 1px solid #eaeaea;
+      font-weight: 700;
+      font-size: 1.25rem;
+    }
+
+    .container {
+      display: flex;
+      min-height: calc(100vh - 107px);
+      /* full height except header and footer */
+    }
+
+    nav {
+      width: 200px;
+      background-color: #fafafa;
+      border-right: 1px solid #eaeaea;
+      padding: 24px 20px;
+    }
+
+    nav h3 {
+      font-weight: 700;
+      font-size: 1rem;
+      margin-bottom: 16px;
+    }
+
+    nav button {
+      display: block;
+      width: 100%;
+      background: #e6e6e6;
+      border: none;
+      padding: 10px 16px;
+      margin-bottom: 12px;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      text-align: left;
+      cursor: pointer;
+      color: #253237;
+    }
+
+    nav button:hover {
+      background-color: #d4d4d4;
+    }
+
+    main {
+      flex-grow: 1;
+      padding: 24px 36px;
+      background: #fff;
+    }
+
+    main h2 {
+      font-weight: 700;
+      margin-bottom: 24px;
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 18px 18px;
+      max-width: 480px;
+    }
+
+    .card {
+      border-radius: 10px;
+      padding: 24px 20px 28px;
+      font-size: 0.9rem;
+      box-sizing: border-box;
+    }
+
+    .card>div:first-child {
+      color: #536471;
+      margin-bottom: 12px;
+    }
+
+    .card strong {
+      font-weight: 900;
+      font-size: 1.75rem;
+    }
+
+    .card.departments {
+      background: #dbe8f9;
+      color: #253237;
+    }
+
+    .card.students {
+      background: #d9eddc;
+      color: #253237;
+    }
+
+    .card.professors {
+      background: #fbeedd;
+      color: #253237;
+    }
+
+    .card.hods {
+      background: #f3e8f9;
+      color: #253237;
+    }
+
+    footer {
+      font-size: 0.875rem;
+      color: #536471;
+      padding: 12px 24px;
+      text-align: center;
+      border-top: 1px solid #eaeaea;
+    }
+  </style>
 </head>
+
 <body>
-<header>Admin Dashboard</header>
-<div class="container">
-  <nav>
-    <h3>Navigation</h3>
-    <button type="button">Departments</button>
-    <button type="button">Users</button>
-    <button type="button">Add User</button>
-  </nav>
-  <main>
-    <h2>Dashboard Overview</h2>
-    <div class="cards">
-      <div class="card departments">
-        <div>Total Departments</div>
-        <strong>5</strong>
+  <header>Admin Dashboard</header>
+  <div class="container">
+    <nav>
+      <h3>Navigation</h3>
+      <button type="button" onclick="openDepartments()">Departments</button>
+      <button type="button">Users</button>
+      <button type="button">Add User</button>
+    </nav>
+    <main>
+      <h2>Dashboard Overview</h2>
+      <div class="cards">
+        <div class="card departments">
+          <div>Total Departments</div>
+          <strong id="departments"></strong>
+        </div>
+        <div class="card students">
+          <div>Total Students</div>
+          <strong id="students"></strong>
+        </div>
+        <div class="card professors">
+          <div>Total Professors</div>
+          <strong id="professors"></strong>
+        </div>
+        <div class="card hods">
+          <div>Total HODs</div>
+          <strong id="hods"></strong>
+        </div>
       </div>
-      <div class="card students">
-        <div>Total Students</div>
-        <strong>245</strong>
-      </div>
-      <div class="card professors">
-        <div>Total Professors</div>
-        <strong>18</strong>
-      </div>
-      <div class="card hods">
-        <div>Total HODs</div>
-        <strong>5</strong>
-      </div>
-    </div>
-  </main>
-</div>
-<footer>© 2025 Admin Dashboard. All rights reserved.</footer>
+    </main>
+  </div>
+  <footer>© 2025 Admin Dashboard. All rights reserved.</footer>
 </body>
+
+<script>
+  let departmentsCount = document.getElementById("departments")
+  let studentsCount = document.getElementById("students")
+  let professorsCount = document.getElementById("professors")
+  let hodsCount = document.getElementById("hods")
+
+
+  fetch("/admin/getUserCount")
+    .then((res) => res.json())
+    .then((data) => {
+      data.forEach(element => {
+        if (element._id == "student") {
+          studentsCount.innerText = element.total;
+        }
+        else if (element._id == "professor") {
+          professorsCount.innerText = element.total;
+        }
+        else if (element._id == "HOD") {
+          hodsCount.innerText = element.total;
+        }
+          departmentsCount.innerText = element.totalDepartments;
+      });
+    })
+    .catch((err) => {
+      console.log(err);
+    })
+
+    function openDepartments(){
+       window.location.href = "/admin/departments";
+    }
+</script>
+
 </html>

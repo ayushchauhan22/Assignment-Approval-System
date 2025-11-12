@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -103,18 +104,21 @@
             .form-container {
                 padding: 20px;
             }
+
             .form h2 {
                 font-size: 24px;
             }
         }
     </style>
 </head>
+
 <body>
     <div class="container">
         <div class="form-container">
-            <form class="form" id="registerForm" action="#" method="post">
+            <form class="form" id="registerForm" action="/auth/registerData" method="post">
                 <h2>Sign Up</h2>
-                <div id="error-message" class="error-message" style="display: none; color: red; text-align: center; margin-bottom: 20px;"></div>
+                <div id="error-message" class="error-message"
+                    style="display: none; color: red; text-align: center; margin-bottom: 20px;"></div>
                 <div class="input-group">
                     <label for="name">Full Name</label>
                     <input type="text" id="name" name="name" required>
@@ -128,12 +132,14 @@
                 <div class="input-group">
                     <label for="password">Password</label>
                     <input type="password" id="password" name="password" required>
-                    <div id="password-error" class="field-error" style="display: none; color: red; font-size: 14px;"></div>
+                    <div id="password-error" class="field-error" style="display: none; color: red; font-size: 14px;">
+                    </div>
                 </div>
                 <div class="input-group">
                     <label for="confirm">Confirm Password</label>
                     <input type="password" id="confirm" name="confirm" required>
-                    <div id="confirm-error" class="field-error" style="display: none; color: red; font-size: 14px;"></div>
+                    <div id="confirm-error" class="field-error" style="display: none; color: red; font-size: 14px;">
+                    </div>
                 </div>
                 <button type="submit" class="btn">Sign Up</button>
                 <p class="switch">Already have an account? <a href="/auth/login">Login</a></p>
@@ -141,7 +147,7 @@
         </div>
     </div>
     <script>
-        document.getElementById('registerForm').addEventListener('submit', function(event) {
+        document.getElementById('registerForm').addEventListener('submit', function (event) {
             event.preventDefault(); // Prevent form submission
 
             // Clear previous errors
@@ -197,30 +203,61 @@
             }
 
             if (!hasError) {
-                // If no errors, you can submit the form or handle registration here
-                // For now, since backend is not implemented, show a success message or redirect
-                document.getElementById('error-message').textContent = 'Registration successful! (Backend not implemented yet)';
-                document.getElementById('error-message').style.color = 'green';
-                document.getElementById('error-message').style.display = 'block';
+                fetch("/auth/registerData", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        name: document.getElementById("name").value,
+                        email: document.getElementById("email").value,
+                        password: document.getElementById("password").value
+                    })
+                })
+                .then(res => window.location.href = res.url)   // or res.json()
+                .catch(err => console.error(err));
+
             }
         });
 
+        const urlParams = new URLSearchParams(window.location.search);
+        const error = urlParams.get('error');
+        const success = urlParams.get('success');
+
+
+        if (error) {
+            const errorMessage = document.getElementById('error-message');
+            if (error === 'User_Already_Exist') {
+                errorMessage.textContent = 'User Already Exist. Please use another one.';
+            } else if (error === 'invalid_credentials') {
+                errorMessage.textContent = 'Invalid credentials. Please check your email.';
+            }
+            errorMessage.style.display = 'block';
+        }
+
+        if (success) {
+            document.getElementById('error-message').textContent = 'Registration successful!';
+            document.getElementById('error-message').style.color = 'green';
+            document.getElementById('error-message').style.display = 'block';
+
+        }
         // Hide field errors when user starts typing in input fields
-        document.getElementById('name').addEventListener('input', function() {
+        document.getElementById('name').addEventListener('input', function () {
             document.getElementById('name-error').style.display = 'none';
         });
 
-        document.getElementById('email').addEventListener('input', function() {
+        document.getElementById('email').addEventListener('input', function () {
             document.getElementById('email-error').style.display = 'none';
         });
 
-        document.getElementById('password').addEventListener('input', function() {
+        document.getElementById('password').addEventListener('input', function () {
             document.getElementById('password-error').style.display = 'none';
         });
 
-        document.getElementById('confirm').addEventListener('input', function() {
+        document.getElementById('confirm').addEventListener('input', function () {
             document.getElementById('confirm-error').style.display = 'none';
         });
     </script>
 </body>
+
 </html>

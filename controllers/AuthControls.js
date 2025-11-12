@@ -1,33 +1,26 @@
 const path = require('path');
 const jwt = require('jsonwebtoken');
-const {hashPasswordSync, verifyPasswordSync} = require('../hashPassword')
+const { hashPasswordSync, verifyPasswordSync } = require('../hashPassword')
+const User = require("../models/UsersSchema");
 
-const user = [
-    {
-        id: 101,
-        name: "aman",
-        role: "admin",
-        password: "$2b$12$dE2l2/i.Vf9CVQjnzinrd.d/EL4lsvf9XHFA8XEPV2cCBPh5Av/9a", //1234
-        email: "aman123@gmail.com"
-    }
-]
 const showLoginPage = (req, res) => {
     res.sendFile(path.join(__dirname, "../pages/loginPage.html"));
 };
 
 const showRegisterPage = (req, res) => {
-    res.sendFile(path.join(__dirname, "../pages/registerPage.html"));
+    res.sendFile(path.join(__dirname, "../pages/Register.html"));
 };
 
-const autherizeUser = (req, res) => {
+const autherizeUser = async (req, res) => {
     try {
-        let userFound = user.find(ele => ele.email == req.body.email);
-        
+        const { email, password } = req.body;
+        const userFound = await User.findOne({ email });
+
         if (userFound) {
-            if (verifyPasswordSync(req.body.password, userFound.password)) {
-                const token = jwt.sign({ username: req.body.username, role: userFound.role }, process.env.JWT_KEY, { expiresIn: '5m' })
+            if (verifyPasswordSync(password, userFound.password)) {
+                const token = jwt.sign({ username: userFound.name, role: userFound.role }, process.env.JWT_KEY, { expiresIn: '5h' })
                 res.cookie("jwt", token)
-                
+
                 if (userFound.role == "admin") {
                     res.redirect('/admin/adminDashboard');
                 }
@@ -44,9 +37,38 @@ const autherizeUser = (req, res) => {
     }
 }
 
+const registerUser = async (req, res) => {
+    try {
+        const { name, email, password, role } = req.body;
+
+
+        const existingUser = await User.findOne({ email });
+        if (existingUser) {
+            res.redirect('/auth/signup/?error=User_Already_Exist')
+        }
+
+        const hashedPassword = hashPasswordSync(password);
+
+        await User.create({
+            name: name,
+            email: email,
+            password: hashedPassword,
+            role: "student"
+        });
+        const token = jwt.sign({ username: req.body.username, role: "student" }, process.env.JWT_KEY, { expiresIn: '5h' })
+        
+        res.cookie("jwt", token)
+            res.redirect('/auth/signup/?success=User_Added_successfully')
+    }
+    catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "server error" });
+}
+}
 
 module.exports = {
     showLoginPage,
     showRegisterPage,
-    autherizeUser
+    autherizeUser,
+    registerUser
 };
