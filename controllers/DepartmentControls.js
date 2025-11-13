@@ -6,30 +6,60 @@ const showDepartments = async (req, res) => {
     res.sendFile(path.join(__dirname, "../pages/createDepartment.html"));
 };
 
+const getAllDepartmentsData = async(req,res)=>{
+    const depmnt = await Department.find()
+
+    res.send(depmnt)
+}
+
 const getDepartments = async (req, res) => {
-    const data = await Department.aggregate([
+    const { page = 1, name  = "", programType ="" } = req.query;
+
+        const matchStage = {};
+
+        if (name) matchStage.name = { $regex: name, $options: "i" };
+        if (programType) matchStage.programType = programType;
+
+        const data = await Department.aggregate([
+        { 
+            $match: matchStage 
+        },
         {
             $lookup: {
-                from: "users",          
-                localField: "deptId",      
+                from: "users",
+                localField: "deptId",
                 foreignField: "deptId",
-                as: "userData"     
+                as: "userData"
             }
         },
         {
             $project: {
                 _id: 0,
-                deptId:1,
+                deptId: 1,
                 name: 1,
                 programType: 1,
-                totalUsers: { $size: "$userData" } 
-            }
+                totalUsers: { $size: "$userData" }
+            },
         },
-        
+        {
+            $skip: ( page - 1 ) * 10 
+        },
+        {
+            $limit: 11
+        }
     ]);
     
-    res.send(data);
+    let hasnext = false;
+    if(data.length == 11){
+        hasnext = true
+    }
+
+    let obj = {
+        "data" : data, 
+        "hasnext" : hasnext
+    }
     
+    res.send(obj);
 
 }
 
@@ -57,7 +87,7 @@ const createDepartment = async (req, res) => {
 };
 
 
-const editDepartmentPage = (req,res)=>{
+const editDepartmentPage = (req, res) => {
     res.sendFile(path.join(__dirname, "../pages/editDepartments.html"))
 }
 
@@ -73,31 +103,48 @@ const getDepartmentByID = async (req, res) => {
 };
 
 const updateDepartment = async (req, res) => {
-     const deptId = Number(req.params.deptId); 
+    const deptId = Number(req.params.deptId);
     const { name, programType, address } = req.body;
 
     const updatedDept = await Department.findOneAndUpdate(
-      { deptId: deptId },          
-      { name, programType, address }, 
-      { new: true }               
+        { deptId: deptId },
+        { name, programType, address },
+        { new: true }
     );
 
     if (!updatedDept) {
-      return res.status(404).json({ message: "Department not found" });
+        return res.status(404).json({ message: "Department not found" });
     }
 
     res.status(200).json({
-      message: "Department updated successfully",
-      department: updatedDept
+        message: "Department updated successfully",
+        department: updatedDept
     });
 };
 
+
+const deleteDepartmentById = async (req, res) => {
+    const deptId = Number(req.params.deptId);
+
+    const del = await Department.findOneAndDelete({ deptId: deptId })
+
+    if (!del) {
+        return res.status(404).json({ message: "Department not found" });
+    }
+    res.status(200).json({
+        message: "Department updated successfully",
+        department: del
+    });
+}
+
 module.exports = {
+    getAllDepartmentsData,
     getDepartments,
     showDepartments,
     createDepartment,
     getDepartmentByID,
     updateDepartment,
     viewAllDepartments,
-    editDepartmentPage
+    editDepartmentPage,
+    deleteDepartmentById
 };

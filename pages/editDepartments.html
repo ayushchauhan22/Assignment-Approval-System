@@ -190,6 +190,7 @@
                 programType: document.getElementById("program").value,
                 address: document.getElementById("address").value.trim()
             };
+            
 
             const res = await fetch(`/admin/department/${deptId}/update`, {
                 method: "PUT",

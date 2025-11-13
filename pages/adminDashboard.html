@@ -129,7 +129,9 @@
       <h3>Navigation</h3>
       <button type="button" onclick="openDepartments()">Departments</button>
       <button type="button">Users</button>
-      <button type="button">Add User</button>
+      <button type="button" onclick="createUser()">Add User</button>
+      <button type="button" onclick="createDepartments()">Create Departments</button>
+
     </nav>
     <main>
       <h2>Dashboard Overview</h2>
@@ -185,6 +187,14 @@
 
     function openDepartments(){
        window.location.href = "/admin/departments";
+    }
+
+    function createDepartments(){
+      window.location.href = "/admin/department/create";
+    }
+
+    function createUser(){
+      window.location.href = "/admin/users/create_route";
     }
 </script>
 

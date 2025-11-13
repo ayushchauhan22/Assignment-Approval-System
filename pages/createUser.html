@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create User</title>
+    <style>
+        /* Reset and base styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: #333;
+        }
+
+        /* Container and form wrapper */
+        .container {
+            width: 100%;
+            max-width: 400px;
+            padding: 20px;
+        }
+
+        .form-container {
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+        }
+
+        .form h2 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #667eea;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 5px rgba(102, 126, 234, 0.5);
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+            border: none;
+            padding: 12px;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            width: 100%;
+            transition: transform 0.2s;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .switch {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 14px;
+        }
+
+        .switch a {
+            color: #667eea;
+            text-decoration: none;
+        }
+
+        .switch a:hover {
+            text-decoration: underline;
+        }
+
+        .input-group select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            background: white;
+            cursor: pointer;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        .input-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 5px rgba(102, 126, 234, 0.5);
+        }
+
+
+        /* Responsive design */
+        @media (max-width: 480px) {
+            .form-container {
+                padding: 20px;
+            }
+
+            .form h2 {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="form-container">
+            <form class="form" id="registerForm">
+                <h2>Create User</h2>
+                <div id="error-message" class="error-message"
+                    style="display: none; color: red; text-align: center; margin-bottom: 20px;"></div>
+                <div class="input-group">
+                    <label for="name">Full Name</label>
+                    <input type="text" id="name" name="name" required>
+                    <div id="name-error" class="field-error" style="display: none; color: red; font-size: 14px;"></div>
+                </div>
+                <div class="input-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" name="email" required>
+                    <div id="email-error" class="field-error" style="display: none; color: red; font-size: 14px;"></div>
+                </div>
+                <div class="input-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" required>
+                    <div id="password-error" class="field-error" style="display: none; color: red; font-size: 14px;">
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label for="department">Departments</label>
+                    <select id="department">
+
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label for="role">role</label>
+                    <select id="role">
+                        <option value="Student">Student</option>
+                        <option value="Professor">Professor</option>
+                        <option value="HOD">HOD</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn">Create User</button>
+                <p class="switch"> <a href="/admin/adminDashboard"><- Back to Dashboard</a></p>
+            </form>
+        </div>
+    </div>
+    <script>
+
+        fetch('/admin/departments/seeAllData')
+            .then((res) => res.json())
+            .then((data) => {
+                renderOption(data)
+            })
+
+
+        function renderOption(data) {
+            document.getElementById('department').innerHTML = '';
+
+            if (data.length === 0) {
+                document.getElementById('department').innerHTML = '<tr><td colspan="4" style="text-align:center; padding: 15px;">No departments found.</td></tr>';
+                return;
+            }
+
+            data.forEach(dept => {
+                const option = document.createElement('option');
+                option.innerText = dept.name;
+                option.value = dept.deptId;
+                option.id = dept.deptId;
+
+                document.getElementById('department').appendChild(option);
+            });
+        }
+
+
+        document.getElementById('registerForm').addEventListener('submit', function (event) {
+            event.preventDefault();
+
+
+            document.querySelectorAll('.field-error').forEach(el => el.style.display = 'none');
+            document.getElementById('error-message').style.display = 'none';
+
+            const name = document.getElementById('name').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+            const department = document.getElementById('department').value;
+            const role = document.getElementById('role').value;
+
+
+
+            let hasError = false;
+
+            // Validate name
+            if (name === '') {
+                document.getElementById('name-error').textContent = 'Full name is required.';
+                document.getElementById('name-error').style.display = 'block';
+                hasError = true;
+            }
+
+            // Validate email
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (email === '') {
+                document.getElementById('email-error').textContent = 'Email is required.';
+                document.getElementById('email-error').style.display = 'block';
+                hasError = true;
+            } else if (!emailRegex.test(email)) {
+                document.getElementById('email-error').textContent = 'Please enter a valid email address.';
+                document.getElementById('email-error').style.display = 'block';
+                hasError = true;
+            }
+
+            // Validate password
+            if (password === '') {
+                document.getElementById('password-error').textContent = 'Password is required.';
+                document.getElementById('password-error').style.display = 'block';
+                hasError = true;
+            } else if (password.length < 6) {
+                document.getElementById('password-error').textContent = 'Password must be at least 6 characters long.';
+                document.getElementById('password-error').style.display = 'block';
+                hasError = true;
+            }
+
+            if (!hasError) {
+                fetch("/auth/registerData", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        name: document.getElementById("name").value,
+                        email: document.getElementById("email").value,
+                        password: document.getElementById("password").value,
+                        role: document.getElementById('role').value,
+                        deptId: document.getElementById('department').value
+                    })
+                })
+                    .then(res => window.location.href = res.url)
+                    .catch(err => console.error(err));
+
+            }
+        });
+
+
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const error = urlParams.get('error');
+        const success = urlParams.get('success');
+
+        if (error) {
+            const errorMessage = document.getElementById('error-message');
+            if (error === 'User_Already_Exist') {
+                errorMessage.textContent = 'User Already Exist. Please use another one.';
+            } else if (error === 'invalid_credentials') {
+                errorMessage.textContent = 'Invalid credentials. Please check your email.';
+            } else {
+                errorMessage.textContent = error;
+            }
+            errorMessage.style.color = 'red';
+            errorMessage.style.display = 'block';
+        }
+
+        if (success) {
+            const errorMessage = document.getElementById('error-message');
+            errorMessage.textContent = 'Registration successful!';
+            errorMessage.style.color = 'green';
+            errorMessage.style.display = 'block';
+        }
+
+        // Hide top error when typing
+        document.getElementById('name').addEventListener('input', () => {
+            document.getElementById('error-message').style.display = 'none';
+            history.replaceState(null, '', window.location.pathname);
+        });
+
+        document.getElementById('email').addEventListener('input', () => {
+            document.getElementById('error-message').style.display = 'none';
+            history.replaceState(null, '', window.location.pathname);
+        });
+
+        document.getElementById('password').addEventListener('input', () => {
+            document.getElementById('error-message').style.display = 'none';
+            history.replaceState(null, '', window.location.pathname);
+        });
+
+        document.getElementById('department').addEventListener('change', () => {
+            document.getElementById('error-message').style.display = 'none';
+            history.replaceState(null, '', window.location.pathname);
+        });
+
+        document.getElementById('role').addEventListener('change', () => {
+            document.getElementById('error-message').style.display = 'none';
+            history.replaceState(null, '', window.location.pathname);
+        });
+
+
+
+
+    </script>
+</body>
+
+</html>

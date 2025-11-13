@@ -19,14 +19,18 @@ const userCount = async (req, res) => {
     let sec = await Department.aggregate([
         { $count: "totalDepartments" }
     ])
-    console.log(sec);
-    result.push(sec[0]);
-    console.log(result);
-    
+    result.push(sec[0]);    
     res.send(result);
 
 }
+
+
+
+const showCreateUserForm = (req,res)=>{
+    res.sendFile(path.join(__dirname, "../pages/createUser.html"));
+}
 module.exports = {
     showAdminDashboard,
-    userCount
+    userCount,
+    showCreateUserForm
 }

@@ -39,31 +39,36 @@ const autherizeUser = async (req, res) => {
 
 const registerUser = async (req, res) => {
     try {
-        const { name, email, password, role } = req.body;
+        const { name, email, password, role, deptId } = req.body;
 
 
         const existingUser = await User.findOne({ email });
         if (existingUser) {
-            res.redirect('/auth/signup/?error=User_Already_Exist')
+            return res.redirect(req.get('referer') + '?error=User_Already_Exist');
         }
 
         const hashedPassword = hashPasswordSync(password);
 
-        await User.create({
+        let data = {
             name: name,
             email: email,
             password: hashedPassword,
-            role: "student"
-        });
-        const token = jwt.sign({ username: req.body.username, role: "student" }, process.env.JWT_KEY, { expiresIn: '5h' })
-        
-        res.cookie("jwt", token)
-            res.redirect('/auth/signup/?success=User_Added_successfully')
+            role: role || "student",
+        }
+        if (deptId) {
+            data.deptId = deptId;
+        }
+
+        await User.create(data);
+        // const token = jwt.sign({ username: req.body.username, role: "student" }, process.env.JWT_KEY, { expiresIn: '5h' })
+
+        // res.cookie("jwt", token)
+        res.redirect(req.get('referer') + '?success=User_Added_successfully');
     }
     catch (error) {
-    console.log(error);
-    res.status(500).json({ message: "server error" });
-}
+        console.log(error);
+        res.status(500).json({ message: "server error" });
+    }
 }
 
 module.exports = {

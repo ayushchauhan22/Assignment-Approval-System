@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Department List with Pagination</title>
+    <title>Department List </title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -21,13 +21,15 @@
 
         .filters {
             display: flex;
-            justify-content: flex-start; /* Changed to align filters to the left side, next to each other */
+            justify-content: flex-start;
+            /* Changed to align filters to the left side, next to each other */
             align-items: end;
             margin-bottom: 15px;
             width: 100%;
             margin-left: auto;
             margin-right: auto;
-            gap: 20px; /* Added gap for spacing between search and filter */
+            gap: 20px;
+            /* Added gap for spacing between search and filter */
         }
 
         .filters label {
@@ -144,7 +146,8 @@
             .filters {
                 flex-direction: column;
                 align-items: stretch;
-                gap: 0; /* Remove gap on mobile for vertical stacking */
+                gap: 0;
+                /* Remove gap on mobile for vertical stacking */
             }
 
             input[type="search"],
@@ -214,62 +217,103 @@
                 </tr>
             </thead>
             <tbody id="table-body">
-                <!-- Rows get inserted here dynamically -->
             </tbody>
         </table>
     </div>
 
     <div class="pagination" id="pagination-controls">
-        <!-- Pagination buttons inserted here -->
+    </div>
+
+    <!-- Delete Confirmation Popup -->
+    <div id="delete-popup" style="
+    display:none; 
+    position: fixed; 
+    top: 0; left: 0; 
+    width: 100%; height: 100%; 
+    background: rgba(0,0,0,0.4); 
+    justify-content: center; 
+    align-items: center;
+">
+        <div style="
+        background: white; 
+        padding: 20px 25px; 
+        border-radius: 8px; 
+        width: 350px; 
+        text-align: center;
+        box-shadow: 0px 4px 15px rgba(0,0,0,0.2);
+    ">
+            <h3 id="popup-title" style="margin-bottom:10px; font-size:20px;"></h3>
+            <p id="popup-message" style="margin-bottom:20px; color:#555;"></p>
+
+            <button id="cancel-btn" style="
+            padding:8px 15px; 
+            border:none; 
+            background:#ccc; 
+            border-radius:5px; 
+            margin-right:10px; 
+            cursor:pointer;
+        ">Cancel</button>
+
+            <button id="confirm-btn" style="
+            padding:8px 15px; 
+            border:none; 
+            background:#cc0033; 
+            color:white; 
+            border-radius:5px; 
+            cursor:pointer;
+        ">Delete</button>
+        </div>
     </div>
 
     <script>
-        const departments = [];
-        let filteredDepartments = [];
-        const rowsPerPage = 10;
+        let departments = [];
+        let hasNextPage = false;
         let currentPage = 1;
+        let val = ""
+        let type = ""
 
-        // Elements
         const tableBody = document.getElementById('table-body');
         const paginationControls = document.getElementById('pagination-controls');
         const searchInput = document.getElementById('search-input');
         const typeFilter = document.getElementById('type-filter');
 
         window.onload = function () {
-            fetch("/admin/department/getdata")
+            loadDepartments(currentPage);
+        };
+
+        function loadDepartments(page) {
+            fetch(`/admin/department/getdata?page=${page}&name=${val}&programType=${type}`)
                 .then(res => res.json())
                 .then((data) => {
-                    departments.push(...data);
-                    filteredDepartments = [...departments]; // copy data to filtered list
-                    renderTable();
+
+                    departments = data.data;
+                    hasNextPage = data.hasnext;
+
+
+                    renderTable(data);
                     renderPagination();
                 })
                 .catch(err => console.error("Error fetching departments:", err));
-        };
+        }
 
-        function renderTable() {
-            const startIndex = (currentPage - 1) * rowsPerPage;
-            const endIndex = startIndex + rowsPerPage;
-            const pageItems = filteredDepartments.slice(startIndex, endIndex);
-
+        function renderTable(pageItems) {
             tableBody.innerHTML = '';
 
-            if (pageItems.length === 0) {
+            if (pageItems.data.length === 0) {
                 tableBody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding: 15px;">No departments found.</td></tr>';
                 return;
             }
 
-            pageItems.forEach(dept => {
+            pageItems.data.forEach(dept => {
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-                  <td>${dept.name}</td>
-                  <td>${dept.programType || "N/A"}</td>
-                  <td>${dept.totalUsers ?? 0}</td>
-                  <td class="actions">
-                    <button class="edit" onclick="editDepartment('${dept.deptId}')">Edit</button>
-                    <a href="#" class="delete" onclick="deleteDepartment('${dept.deptId}'); return false;">Delete</a>
-                  </td>`
-                    ;
+                    <td>${dept.name}</td>
+                    <td>${dept.programType || "N/A"}</td>
+                    <td>${dept.totalUsers ?? 0}</td>
+                    <td class="actions">
+                      <button class="edit" onclick="editDepartment('${dept.deptId}')">Edit</button>
+                      <a href="#" class="delete" osnclick="deleteDepartment('${dept.deptId}'); return false;">Delete</a>
+                    </td>`;
                 tableBody.appendChild(tr);
             });
         }
@@ -277,61 +321,35 @@
         function renderPagination() {
             paginationControls.innerHTML = '';
 
-            const pageCount = Math.ceil(filteredDepartments.length / rowsPerPage);
-            if (pageCount <= 1) return;
-
-            // Prev button
+            // Previous Button
             const prevBtn = document.createElement('button');
             prevBtn.textContent = 'Prev';
             prevBtn.disabled = currentPage === 1;
             prevBtn.onclick = () => {
-                currentPage--;
-                renderTable();
-                renderPagination();
+                if (currentPage > 1) {
+                    currentPage--;
+                    loadDepartments(currentPage);
+                }
             };
             paginationControls.appendChild(prevBtn);
 
-            // Page buttons
-            for (let i = 1; i <= pageCount; i++) {
-                const btn = document.createElement('button');
-                btn.textContent = i;
-                if (i === currentPage) btn.classList.add('active');
-                btn.onclick = () => {
-                    currentPage = i;
-                    renderTable();
-                    renderPagination();
-                };
-                paginationControls.appendChild(btn);
-            }
+            // Current Page Number
+            const pageBtn = document.createElement('button');
+            pageBtn.textContent = currentPage;
+            pageBtn.classList.add('active');
+            paginationControls.appendChild(pageBtn);
 
-            // Next button
+            // Next Button
             const nextBtn = document.createElement('button');
             nextBtn.textContent = 'Next';
-            nextBtn.disabled = currentPage === pageCount;
+            nextBtn.disabled = !hasNextPage;
             nextBtn.onclick = () => {
-                currentPage++;
-                renderTable();
-                renderPagination();
+                if (hasNextPage) {
+                    currentPage++;
+                    loadDepartments(currentPage);
+                }
             };
             paginationControls.appendChild(nextBtn);
-        }
-
-        function filterDepartments() {
-            const searchTerm = searchInput.value.trim().toLowerCase();
-            const selectedType = typeFilter.value;
-
-            filteredDepartments = departments.filter(dept => {
-                const matchesSearch = dept.name.toLowerCase().includes(searchTerm);
-                const matchesType =
-                    selectedType === 'All' ||
-                    dept.programType === selectedType ||
-                    dept.type === selectedType;
-                return matchesSearch && matchesType;
-            });
-
-            currentPage = 1;
-            renderTable();
-            renderPagination();
         }
 
         function editDepartment(deptId) {
@@ -340,23 +358,85 @@
 
         function deleteDepartment(deptId) {
             const ele = departments.find(d => d.deptId == deptId);
-           
+
             if (ele.totalUsers > 0) {
-                alert(`Can't delete "${ele.name}" department`); 
+                // Show popup with only cancel button
+                showDeletePopup(
+                    "Cannot Delete",
+                    `"${ele.name}" cannot be deleted because it has ${ele.totalUsers} assigned users.`,
+                    null,
+                    false
+                );
+                return;
             }
-            else if (confirm(`Are you sure you want to delete the "${ele.name}" department?`)) { 
-                const index = departments.indexOf(ele);
-                if (index !== -1) {
-                    departments.splice(index, 1);
-                    filterDepartments();
-                }
-            }
+
+            // Show normal delete confirmation popup
+            showDeletePopup(
+                "Delete Department",
+                `Are you sure you want to delete the "${ele.name}" department?`,
+                deptId,
+                true
+            );
         }
 
-        // Event listeners
-        searchInput.addEventListener('input', filterDepartments);
-        typeFilter.addEventListener('change', filterDepartments);
+
+        searchInput.addEventListener("input", () => {
+            val = searchInput.value;
+            currentPage = 1;
+            loadDepartments(currentPage);
+        })
+
+        typeFilter.addEventListener('change', () => {
+            type = typeFilter.value
+            currentPage = 1;
+            loadDepartments(currentPage);
+        })
+
+
+        let deleteDeptId = null;
+
+        function showDeletePopup(title, message, deptId, canDelete = true) {
+            deleteDeptId = deptId;
+
+            document.getElementById("popup-title").textContent = title;
+            document.getElementById("popup-message").textContent = message;
+
+            const confirmBtn = document.getElementById("confirm-btn");
+
+            if (canDelete) {
+                confirmBtn.style.display = "inline-block";
+            } else {
+                confirmBtn.style.display = "none";
+            }
+
+            document.getElementById("delete-popup").style.display = "flex";
+        }
+
+        function closeDeletePopup() {
+            deleteDeptId = null;
+            document.getElementById("delete-popup").style.display = "none";
+        }
+
+        document.getElementById("cancel-btn").onclick = () => {
+            closeDeletePopup();
+        };
+
+        document.getElementById("confirm-btn").onclick = () => {
+            if (deleteDeptId) {
+                // Perform the delete call
+                fetch(`/admin/departments/${deleteDeptId}/delete`)
+                    .then(res => res.json())
+                    .then(data => {
+                        closeDeletePopup();
+                        window.location.reload();
+                    })
+                    .catch(err => console.error(err));
+            }
+        };
+
+
     </script>
+
 
 
 </body>
