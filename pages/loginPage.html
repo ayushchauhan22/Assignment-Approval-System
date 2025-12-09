@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -103,18 +104,21 @@
             .form-container {
                 padding: 20px;
             }
+
             .form h2 {
                 font-size: 24px;
             }
         }
     </style>
 </head>
+
 <body>
     <div class="container">
         <div class="form-container">
-            <form class="form" action="/auth/logindata" method="post">
+            <form class="form" id="loginForm">
                 <h2>Login</h2>
-                <div id="error-message" class="error-message" style="display: none; color: red; text-align: center; margin-bottom: 20px;"></div>
+                <div id="error-message" class="error-message"
+                    style="display: none; color: red; text-align: center; margin-bottom: 20px;"></div>
                 <div class="input-group">
                     <label for="email">Email</label>
                     <input type="email" id="email" name="email" required>
@@ -124,33 +128,58 @@
                     <input type="password" id="password" name="password" required>
                 </div>
                 <button type="submit" class="btn">Login</button>
-                <p class="switch">Don't have an account? <a href="/auth/signup">Sign up</a></p>
+                <!-- <p class="switch">Don't have an account? <a href="/auth/signup">Sign up</a></p> -->
             </form>
         </div>
     </div>
     <script>
-        // Get URL parameters
-        const urlParams = new URLSearchParams(window.location.search);
-        const error = urlParams.get('error');
+        document.getElementById("loginForm").addEventListener("submit", async function (e) {
+            e.preventDefault();
 
-        if (error) {
-            const errorMessage = document.getElementById('error-message');
-            if (error === 'incorrect_password') {
-                errorMessage.textContent = 'Incorrect password. Please try again.';
-            } else if (error === 'invalid_credentials') {
-                errorMessage.textContent = 'Invalid credentials. Please check your email.';
+            const email = document.getElementById("email").value.trim();
+            const password = document.getElementById("password").value.trim();
+            const errorBox = document.getElementById("error-message");
+
+            try {
+                const res = await fetch("/auth/logindata", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ email, password })
+                });
+
+                const data = await res.json();
+
+                if (data.success) {
+                    if (data.role === "admin") {
+                        window.location.href = "/admin/adminDashboard";
+                    } else{
+                         window.location.href ='/user/userDashboard';
+                    }
+                }
+
+                if (data.message === "invalid_credentials") {
+                    errorBox.textContent = "No account found with this email.";
+                    errorBox.style.color = "red";
+                    errorBox.style.display = "block";
+                    return;
+                }
+
+                if (data.message === "incorrect_password") {
+                    errorBox.textContent = "Incorrect password. Please try again.";
+                    errorBox.style.color = "red";
+                    errorBox.style.display = "block";
+                    return;
+                }
+
+            } catch (err) {
+                console.error(err);
+                errorBox.textContent = "Server error. Try again later.";
+                errorBox.style.color = "red";
+                errorBox.style.display = "block";
             }
-            errorMessage.style.display = 'block';
-        }
-
-        // Hide error message when user starts typing in input fields
-        document.getElementById('email').addEventListener('input', function() {
-            document.getElementById('error-message').style.display = 'none';
         });
 
-        document.getElementById('password').addEventListener('input', function() {
-            document.getElementById('error-message').style.display = 'none';
-        });
     </script>
 </body>
+
 </html>

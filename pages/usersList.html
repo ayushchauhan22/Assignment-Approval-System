@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Department List </title>
+    <title>Users List </title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -48,42 +48,6 @@
 
         input[type="search"] {
             width: 300px;
-        }
-
-        /* New styles for the clear button */
-        #clear {
-            background-color: #ccc;
-            color: #333;
-            border-radius: 8px;
-            border: none;
-            padding: 8px 16px;
-            font-size: 14px;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-        }
-
-        #clear:hover {
-            background-color: #b3b3b3;
-        }
-
-        /* New styles for the search button */
-        #search {
-            background-color: #2a7a82;
-            color: white;
-            border-radius: 8px;
-            border: none;
-            padding: 8px 16px;
-            font-size: 14px;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-        }
-
-        #search:hover {
-            background-color: #23666c;
-        }
-
-        #search:active {
-            transform: scale(0.97);
         }
 
         select {
@@ -178,7 +142,6 @@
         }
 
 
-
         .back-btn {
             background-color: #2a7a82;
             color: white;
@@ -212,7 +175,6 @@
                 text-align: center;
             }
         }
-
 
         /* Responsive adjustments */
         @media (max-width: 768px) {
@@ -257,6 +219,17 @@
             }
         }
 
+        /* When navbar is injected (it floats left), push page content to the right */
+        .page-content {
+            margin-left: 220px;
+        }
+
+        @media (max-width: 768px) {
+            .page-content {
+                margin-left: 0;
+            }
+        }
+
         /* Sticky pagination: fixed at bottom, centered within content area to the right of the sidebar */
         .pagination {
             position: fixed;
@@ -284,17 +257,6 @@
                 padding-bottom: 120px;
             }
         }
-
-        /* When navbar is injected (it floats left), push page content to the right */
-        .page-content {
-            margin-left: 220px;
-        }
-
-        @media (max-width: 768px) {
-            .page-content {
-                margin-left: 0;
-            }
-        }
     </style>
 </head>
 
@@ -311,28 +273,31 @@
                 <input type="search" id="search-input" placeholder="Search by department name" />
             </div>
             <div>
-                <label for="type-filter">Filter by Type</label>
-                <select id="type-filter">
+                <label for="role">Role</label>
+                <select id="role">
                     <option value="All">All</option>
-                    <option value="UG">UG</option>
-                    <option value="PG">PG</option>
-                    <option value="Research">Research</option>
+                    <option value="student">Student</option>
+                    <option value="professor">Professor</option>
+                    <option value="HOD">HOD</option>
                 </select>
             </div>
 
             <div>
-                <button type="button" id="search">Search</button>
-                <button type="button" id="clear">Clear</button>
+                <label for="department">Departments</label>
+                <select id="department">
+                </select>
             </div>
+
         </div>
 
         <div class="table-container">
             <table>
                 <thead>
                     <tr>
-                        <th>Department Name</th>
-                        <th>Type</th>
-                        <th>Number of Users</th>
+                        <th>Users Name</th>
+                        <th>Email</th>
+                        <th>Role</th>
+                        <th>Department</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -389,6 +354,7 @@
 
 
 
+
     <script>
         fetch("/navbar.html")
             .then(response => response.text())
@@ -396,27 +362,61 @@
                 document.getElementById("navbar").innerHTML = data;
             });
 
-        let departments = [];
+        let users = [];
         let hasNextPage = false;
         let currentPage = 1;
         let val = ""
-        let type = ""
+        let role = ""
+        let dept = ""
 
         const tableBody = document.getElementById('table-body');
         const paginationControls = document.getElementById('pagination-controls');
         const searchInput = document.getElementById('search-input');
-        const typeFilter = document.getElementById('type-filter');
+        const roleFilter = document.getElementById('role');
+        const departmentFilter = document.getElementById('department');
 
         window.onload = function () {
-            loadDepartments(currentPage);
+            loadUsers(currentPage);
+            getDepartmentOptionData();
         };
 
-        function loadDepartments(page) {
-            fetch(`/admin/department/getdata?page=${page}&name=${val}&programType=${type}`)
+        function getDepartmentOptionData() {
+            fetch('/admin/departments/seeAllData')
+                .then((res) => res.json())
+                .then((data) => {
+                    renderOption(data)
+                })
+        }
+
+        function renderOption(data) {
+            const select = document.getElementById('department');
+
+            select.innerHTML = "";
+
+            const allOption = document.createElement('option');
+            allOption.value = "All";
+            allOption.innerText = "All";
+            select.appendChild(allOption);
+
+            if (data.length === 0) {
+                return;
+            }
+
+            data.forEach(dept => {
+                const option = document.createElement('option');
+                option.innerText = dept.name;
+                option.value = dept.deptId;
+                select.appendChild(option);
+            });
+        }
+
+
+        function loadUsers(page) {
+            fetch(`/admin/users_list?page=${page}&name=${val}&role=${role}&department=${dept}`)
                 .then(res => res.json())
                 .then((data) => {
 
-                    departments = data.data;
+                    users = data.data;
                     hasNextPage = data.hasnext;
 
 
@@ -434,15 +434,16 @@
                 return;
             }
 
-            pageItems.data.forEach(dept => {
+            pageItems.data.forEach(user => {
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td>${dept.name}</td>
-                    <td>${dept.programType || "N/A"}</td>
-                    <td>${dept.totalUsers ?? 0}</td>
+                    <td>${user.name}</td>
+                    <td>${user.email}</td>
+                    <td>${user.role}</td>
+                    <td>${user.department}</td>
                     <td class="actions">
-                      <button class="edit" onclick="editDepartment('${dept.deptId}')">Edit</button>
-                      <a href="#" class="delete" onclick="deleteDepartment('${dept.deptId}'); return false;">Delete</a>
+                      <button class="edit" onclick="editUser('${user.email}')">Edit</button>
+                      <a href="#" class="delete" onclick="deleteUser('${user.email}'); return false;">Delete</a>
                     </td>`;
                 tableBody.appendChild(tr);
             });
@@ -482,72 +483,50 @@
             paginationControls.appendChild(nextBtn);
         }
 
-        function editDepartment(deptId) {
-            window.location.href = `/admin/departments/edit_department?deptId=${deptId}`;
+        function editUser(email) {
+            window.location.href = `/admin/users/edit_user?email=${email}`;
         }
 
-        function deleteDepartment(deptId) {
-            const ele = departments.find(d => d.deptId == deptId);
+        function deleteUser(email) {
 
-            if (ele.totalUsers > 0) {
-                // Show popup with only cancel button
-                showDeletePopup(
-                    "Cannot Delete",
-                    `"${ele.name}" cannot be deleted because it has ${ele.totalUsers} assigned users.`,
-                    null,
-                    false
-                );
-                return;
-            }
-
-            // Show normal delete confirmation popup
             showDeletePopup(
-                "Delete Department",
-                `Are you sure you want to delete the "${ele.name}" department?`,
-                deptId,
-                true
+                "Delete User",
+                `Are you sure you want to delete the "${email}" user?`,
+                email
             );
         }
 
 
-        document.getElementById("search").addEventListener("click", () => {
+        searchInput.addEventListener("input", () => {
             val = searchInput.value;
             currentPage = 1;
-            loadDepartments(currentPage);
+            loadUsers(currentPage);
         })
 
-        document.getElementById("clear").addEventListener("click", () => {
-            // Clear search input and reset type filter to "All"
-            searchInput.value = "";
-            typeFilter.value = "All";
-            val = "";
-            type = "All";
+        roleFilter.addEventListener('change', () => {
+            role = roleFilter.value
             currentPage = 1;
-            loadDepartments(currentPage);
-        });
-
-        typeFilter.addEventListener('change', () => {
-            type = typeFilter.value
-            currentPage = 1;
-            loadDepartments(currentPage);
+            loadUsers(currentPage);
         })
 
+        departmentFilter.addEventListener('change', () => {
+            dept = departmentFilter.value;
+            currentPage = 1;
+            loadUsers(currentPage)
+        })
 
-        let deleteDeptId = null;
+        let emailID = "";
 
-        function showDeletePopup(title, message, deptId, canDelete = true) {
-            deleteDeptId = deptId;
+        function showDeletePopup(title, message, email) {
+            emailID = email;
 
             document.getElementById("popup-title").textContent = title;
             document.getElementById("popup-message").textContent = message;
 
             const confirmBtn = document.getElementById("confirm-btn");
 
-            if (canDelete) {
-                confirmBtn.style.display = "inline-block";
-            } else {
-                confirmBtn.style.display = "none";
-            }
+
+            confirmBtn.style.display = "inline-block";
 
             document.getElementById("delete-popup").style.display = "flex";
         }
@@ -562,9 +541,9 @@
         };
 
         document.getElementById("confirm-btn").onclick = () => {
-            if (deleteDeptId) {
+            if (emailID) {
                 // Perform the delete call
-                fetch(`/admin/departments/${deleteDeptId}/delete`)
+                fetch(`/admin/users/${emailID}/delete`)
                     .then(res => res.json())
                     .then(data => {
                         closeDeletePopup();

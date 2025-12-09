@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Edit Departmenst</title>
+    <title>Edit Users</title>
     <style>
         /* Reset and base styles */
         * {
@@ -142,54 +142,75 @@
 
 <body>
 
-    <div id="navbar"></div>
-
+    
     <div class="container">
+        <div id="navbar"></div>  
         <div class="form-container">
             <form class="form" id="registerForm">
-                <h2>Edit Departments</h2>
+                <h2>Edit Users</h2>
                 <div id="error-message" class="error-message"
                     style="display: none; color: red; text-align: center; margin-bottom: 20px;"></div>
                 <div class="input-group">
-                    <label for="Department Name">Department Name</label>
-                    <input type="text" id="name" name="Department_name" required>
+                    <label for="User Name">User Name</label>
+                    <input type="text" id="name" name="User_name" required>
                 </div>
                 <div class="input-group">
-                    <label for="Program Type">Program Type</label>
-                    <input type="text" id="program" name="program" required>
+                    <label for="Email">Email</label>
+                    <input type="text" id="email" name="email" required>
                 </div>
                 <div class="input-group">
-                    <label for="Address">Address</label>
-                    <textarea id="address"></textarea>
+                    <label for="Password">Password</label>
+                    <input type="password" id="password" name="password" placeholder="Enter new password" required>
+                </div>
+                <!-- <div class="input-group">
+                    <label for="Phone">Phone</label>
+                    <input type="text" id="phone" name="phone" required>
+                </div> -->
+
+                <div class="input-group">
+                    <label for="department">Departments</label>
+                    <select id="department">
+
+                    </select>
                 </div>
 
                 <button type="submit" class="btn">Update</button>
-                <p class="switch"> <a href="/admin/departments"><- Back to Departments List</a></p>
+                <p class="switch"> <a href="/admin/all_UsersPage"><- Back to User List</a></p>
             </form>
         </div>
     </div>
     <script>
+
+        let email;
+        let pswd;
+        window.onload = function () {
+            const params = new URLSearchParams(window.location.search);
+            email = params.get("email");
+
+            fetch('/admin/departments/seeAllData')
+                .then((res) => res.json())
+                .then((data) => {
+                    renderOption(data)
+                })
+
+
+            fetch(`/admin/users/${email}/edit`)
+                .then(res => res.json())
+                .then(data => {
+                    document.getElementById("name").value = data.name;
+                    document.getElementById("email").value = data.email;
+                    document.getElementById("department").value = data.deptId
+                    pswd = data.password
+                })
+                .catch(err => console.error("Error fetching department:", err));
+        };
+
+
         fetch("/navbar.html")
             .then(response => response.text())
             .then(data => {
                 document.getElementById("navbar").innerHTML = data;
             });
-
-
-        let deptId;
-        window.onload = function () {
-            const params = new URLSearchParams(window.location.search);
-            deptId = params.get("deptId");
-
-            fetch(`/admin/departments/${deptId}/edit`)
-                .then(res => res.json())
-                .then(data => {
-                    document.getElementById("name").value = data.name;
-                    document.getElementById("program").value = data.programType;
-                    document.getElementById("address").value = data.address;
-                })
-                .catch(err => console.error("Error fetching department:", err));
-        };
 
 
 
@@ -201,12 +222,13 @@
 
             const updatedData = {
                 name: document.getElementById("name").value,
-                programType: document.getElementById("program").value,
-                address: document.getElementById("address").value.trim()
+                email: document.getElementById("email").value,
+                password: document.getElementById("password").value.trim() || pswd,
+                deptId: document.getElementById("department").value
             };
+            const encodedEmail = encodeURIComponent(email);
 
-
-            const res = await fetch(`/admin/department/${deptId}/update`, {
+            const res = await fetch(`/admin/users/${encodedEmail}/update`, {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json"
@@ -225,6 +247,23 @@
 
         });
 
+        function renderOption(data) {
+            document.getElementById('department').innerHTML = '';
+
+            if (data.length === 0) {
+                document.getElementById('department').innerHTML = '<tr><td colspan="4" style="text-align:center; padding: 15px;">No departments found.</td></tr>';
+                return;
+            }
+
+            data.forEach(dept => {
+                const option = document.createElement('option');
+                option.innerText = dept.name;
+                option.value = dept.deptId;
+                option.id = dept.deptId;
+
+                document.getElementById('department').appendChild(option);
+            });
+        }
 
     </script>
 </body>

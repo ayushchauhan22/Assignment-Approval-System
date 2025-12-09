@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>My Assignments</title>
+  <style>
+    /* Reset + base */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      min-height: 100vh;
+      background-color: #f7faf7;
+      color: #111827;
+      padding: 24px;
+    }
+
+    h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+
+    p.page-subtitle {
+      font-size: 0.95rem;
+      color: #6b7280;
+      margin-bottom: 20px;
+    }
+
+    .page {
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+
+    /* Card wrapper */
+    .card {
+      background-color: #ffffff;
+      border-radius: 12px;
+      box-shadow: 0 0 10px rgb(0 0 0 / 0.05);
+      padding: 20px;
+    }
+
+    /* two-column layout for pages with sidebar */
+    .container {
+      display: flex;
+      gap: 24px;
+      align-items: flex-start;
+    }
+
+    main.content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    /* Top controls: filter + sort */
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 16px;
+      align-items: center;
+    }
+
+    .controls-left {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .controls-label {
+      font-size: 0.85rem;
+      color: #6b7280;
+      margin-right: 4px;
+    }
+
+    /* Filter pills */
+    .filter-pill {
+      border-radius: 999px;
+      border: 1px solid #e5e7eb;
+      padding: 6px 12px;
+      font-size: 0.85rem;
+      background-color: #f9fafb;
+      color: #374151;
+      cursor: pointer;
+      transition: background-color 0.15s, border-color 0.15s, color 0.15s;
+    }
+
+    .filter-pill:hover {
+      background-color: #e5f0ff;
+      border-color: #bfdbfe;
+    }
+
+    .filter-pill.active {
+      background-color: #2563eb;
+      border-color: #1d4ed8;
+      color: #ffffff;
+    }
+
+    /* Sort select */
+    .sort-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.85rem;
+      color: #6b7280;
+    }
+
+    .sort-select {
+      padding: 6px 10px;
+      border-radius: 6px;
+      border: 1px solid #d1d5db;
+      font-size: 0.9rem;
+      background-color: #ffffff;
+      color: #111827;
+    }
+
+    .sort-select:focus {
+      outline: none;
+      border-color: #2563eb;
+      box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+    }
+
+    /* Table styles */
+    .table-wrapper {
+      width: 100%;
+      overflow-x: auto;
+    }
+
+    table.assignments-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+    }
+
+    table.assignments-table thead {
+      background-color: #f9fafb;
+    }
+
+    table.assignments-table th,
+    table.assignments-table td {
+      text-align: left;
+      padding: 10px 12px;
+      border-bottom: 1px solid #e5e7eb;
+      white-space: nowrap;
+    }
+
+    table.assignments-table th {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: #6b7280;
+    }
+
+    table.assignments-table tbody tr:last-child td {
+      border-bottom: none;
+    }
+
+    /* Clickable row feel (via title link) */
+    .assignment-title a {
+      color: #2563eb;
+      font-weight: 600;
+      text-decoration: none;
+    }
+
+    .assignment-title a:hover {
+      text-decoration: underline;
+    }
+
+    /* Status badge */
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+    }
+
+    .status-pending {
+      background-color: #fef3c7;
+      color: #92400e;
+    }
+
+    .status-under-review {
+      background-color: #dbeafe;
+      color: #1d4ed8;
+    }
+
+    .status-approved {
+      background-color: #dcfce7;
+      color: #166534;
+    }
+
+    .status-rejected {
+      background-color: #fee2e2;
+      color: #991b1b;
+    }
+
+    .status-graded {
+      background-color: #ede9fe;
+      color: #5b21b6;
+    }
+
+    /* Date + reviewer */
+    .submitted-date {
+      color: #374151;
+    }
+
+    .reviewer-name {
+      color: #111827;
+      font-weight: 500;
+    }
+
+    /* Row hover */
+    table.assignments-table tbody tr:hover {
+      background-color: #f9fafb;
+    }
+
+    /* Small helper text under table */
+    .table-footer-text {
+      margin-top: 8px;
+      font-size: 0.8rem;
+      color: #9ca3af;
+    }
+
+    /* Responsive: card-like view on narrow screens */
+    @media (max-width: 700px) {
+      table.assignments-table thead {
+        display: none;
+      }
+
+      table.assignments-table,
+      table.assignments-table tbody,
+      table.assignments-table tr,
+      table.assignments-table td {
+        display: block;
+        width: 100%;
+      }
+
+      table.assignments-table tr {
+        margin-bottom: 12px;
+        border-radius: 8px;
+        border: 1px solid #e5e7eb;
+        background-color: #ffffff;
+        overflow: hidden;
+      }
+
+      table.assignments-table td {
+        border-bottom: 1px solid #f3f4f6;
+        padding: 8px 12px;
+        white-space: normal;
+      }
+
+      table.assignments-table td:last-child {
+        border-bottom: none;
+      }
+
+      table.assignments-table td::before {
+        content: attr(data-label);
+        display: block;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: #9ca3af;
+        margin-bottom: 2px;
+      }
+
+      .assignment-title a {
+        font-size: 0.95rem;
+      }
+
+      .controls {
+        align-items: flex-start;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <!-- Two-column layout: navbar on left, content on right -->
+    <div class="container">
+      <div id="navbar-placeholder"></div>
+
+      <main class="content">
+        <h1>My Assignments</h1>
+        <p class="page-subtitle">View, filter, and track the status of all your assignment submissions.</p>
+
+        <div class="card">
+      <!-- Controls: Filter + Sort -->
+      <div class="controls">
+        <div class="controls-left">
+          <span class="controls-label">Status:</span>
+          <button class="filter-pill active">All</button>
+          <button class="filter-pill">Pending</button>
+          <button class="filter-pill">Under Review</button>
+          <button class="filter-pill">Approved</button>
+          <button class="filter-pill">Rejected</button>
+        </div>
+
+        <div class="sort-wrapper">
+          <span>Sort by date:</span>
+          <select class="sort-select">
+            <option>Newest first</option>
+            <option>Oldest first</option>
+          </select>
+          </div>
+        </main>
+      </div>
+    </div>
+
+      <!-- Table -->
+      <div class="table-wrapper">
+        <table class="assignments-table">
+          <thead>
+            <tr>
+              <th>Title</th>
+              <th>Category</th>
+              <th>Status</th>
+              <th>Submitted Date</th>
+              <th>Current Reviewer</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="assignment-title" data-label="Title">
+                <a href="#">DBMS Assignment 1</a>
+              </td>
+              <td data-label="Category">Assignment</td>
+              <td data-label="Status">
+                <span class="status-badge status-under-review">Under Review</span>
+              </td>
+              <td class="submitted-date" data-label="Submitted Date">10 Dec 2025</td>
+              <td class="reviewer-name" data-label="Current Reviewer">Prof. Sharma</td>
+            </tr>
+
+            <tr>
+              <td class="assignment-title" data-label="Title">
+                <a href="#">Research Report on 5G Technologies</a>
+              </td>
+              <td data-label="Category">Report</td>
+              <td data-label="Status">
+                <span class="status-badge status-approved">Approved</span>
+              </td>
+              <td class="submitted-date" data-label="Submitted Date">05 Dec 2025</td>
+              <td class="reviewer-name" data-label="Current Reviewer">Dr. Mehta</td>
+            </tr>
+
+            <tr>
+              <td class="assignment-title" data-label="Title">
+                <a href="#">Machine Learning Project Proposal</a>
+              </td>
+              <td data-label="Category">Thesis</td>
+              <td data-label="Status">
+                <span class="status-badge status-pending">Pending</span>
+              </td>
+              <td class="submitted-date" data-label="Submitted Date">02 Dec 2025</td>
+              <td class="reviewer-name" data-label="Current Reviewer">Not Assigned</td>
+            </tr>
+
+            <tr>
+              <td class="assignment-title" data-label="Title">
+                <a href="#">Web Tech Lab Assignment 3</a>
+              </td>
+              <td data-label="Category">Assignment</td>
+              <td data-label="Status">
+                <span class="status-badge status-rejected">Rejected</span>
+              </td>
+              <td class="submitted-date" data-label="Submitted Date">28 Nov 2025</td>
+              <td class="reviewer-name" data-label="Current Reviewer">Prof. Gupta</td>
+            </tr>
+
+            <tr>
+              <td class="assignment-title" data-label="Title">
+                <a href="#">Operating Systems Quiz Submission</a>
+              </td>
+              <td data-label="Category">Assignment</td>
+              <td data-label="Status">
+                <span class="status-badge status-graded">Graded</span>
+              </td>
+              <td class="submitted-date" data-label="Submitted Date">25 Nov 2025</td>
+              <td class="reviewer-name" data-label="Current Reviewer">Prof. Rao</td>
+            </tr>
+          </tbody>
+            <!-- Rows will be populated dynamically -->
+      </div>
+
+      <p class="table-footer-text">
+        Click on an assignment title to view full details and feedback.
+      </p>
+    </div>
+  </div>
+  <script>
+    // Fetch and render assignments list, with filter/sort and clickable titles
+    const tableBody = document.querySelector('.assignments-table tbody');
+    const filterPills = document.querySelectorAll('.filter-pill');
+    const sortSelect = document.querySelector('.sort-select');
+
+    // Map to badge classes
+    function statusClass(status) {
+      if (!status) return 'status-pending';
+      const s = status.toString().toLowerCase();
+      if (s.includes('approved')) return 'status-approved';
+      if (s.includes('rejected')) return 'status-rejected';
+      if (s.includes('pending')) return 'status-pending';
+      if (s.includes('review')) return 'status-under-review';
+      if (s.includes('graded')) return 'status-graded';
+      if (s.includes('draft')) return 'status-pending';
+      return 'status-pending';
+    }
+
+    async function loadAssignments() {
+      // Determine active filter
+      const active = Array.from(filterPills).find(p => p.classList.contains('active'))?.textContent || 'All';
+      const sortVal = sortSelect.value && sortSelect.value.toLowerCase().includes('oldest') ? 'asc' : 'desc';
+
+      try {
+        const res = await fetch(`/user/assignment/list?status=${encodeURIComponent(active)}&sort=${sortVal}`);
+        const data = await res.json();
+        renderRows(data || []);
+      } catch (err) {
+        console.error('Error loading assignments', err);
+        tableBody.innerHTML = `<tr><td colspan="5" style="padding:12px;color:#dc2626;">Error loading assignments.</td></tr>`;
+      }
+    }
+
+    function renderRows(items) {
+      if (!items || items.length === 0) {
+        tableBody.innerHTML = `<tr><td colspan="5" style="padding:12px;color:#6b7280;">No assignments found.</td></tr>`;
+        return;
+      }
+
+      tableBody.innerHTML = items.map(it => {
+        const date = it.createdAt ? new Date(it.createdAt).toLocaleDateString() : '';
+        const badgeCls = statusClass(it.status);
+        const reviewer = it.reviewerId || 'Not Assigned';
+        return `
+          <tr>
+            <td class="assignment-title" data-label="Title"><a href="/user/assignment/details?id=${it._id}">${escapeHtml(it.title || '')}</a></td>
+            <td data-label="Category">${escapeHtml(it.category || '')}</td>
+            <td data-label="Status"><span class="status-badge ${badgeCls}">${escapeHtml(capitalize(it.status || ''))}</span></td>
+            <td class="submitted-date" data-label="Submitted Date">${date}</td>
+            <td class="reviewer-name" data-label="Current Reviewer">${escapeHtml(reviewer)}</td>
+          </tr>`;
+      }).join('\n');
+    }
+
+    function escapeHtml(s){ return (s||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'})[c]); }
+    function capitalize(s){ if(!s) return ''; return s.charAt(0).toUpperCase() + s.slice(1); }
+
+    // Wire filter pills
+    filterPills.forEach(p=>p.addEventListener('click', ()=>{
+      filterPills.forEach(x=>x.classList.remove('active'));
+      p.classList.add('active');
+      loadAssignments();
+    }));
+
+    sortSelect.addEventListener('change', loadAssignments);
+
+    // Initial load
+    loadAssignments();
+
+    // Load navbar
+    fetch("/usernavbar.html")
+        .then(response => response.text())
+        .then(data => {
+            document.getElementById("navbar-placeholder").innerHTML = data;
+        });
+
+        
+  </script>
+</body>
+</html>

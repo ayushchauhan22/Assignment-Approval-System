@@ -1,10 +1,19 @@
 const { Router } = require('express')
+const {protect} = require('../middleware/protect')
+
 const {
     showAdminDashboard, 
     userCount,
-    showCreateUserForm
+    showCreateUserForm,
+    getUsersData,
+    showUsersListPage,
+    showEditPage,
+    getUserByEmail,
+    updateUser,
+    deleteUserByemailId,
 } = require('../controllers/AdminControls')
-const protect = require('../middleware/protect')
+
+
 const {
     getAllDepartmentsData,
     getDepartments,
@@ -22,6 +31,13 @@ const router = Router()
 router.get('/adminDashboard', protect , showAdminDashboard)
 router.get('/getUserCount', protect, userCount)
 router.get('/users/create_route', protect, showCreateUserForm)
+router.get('/users_list', protect, getUsersData)
+router.get('/all_UsersPage', protect, showUsersListPage )
+router.get('/users/edit_user', protect, showEditPage)
+router.get('/users/:email/edit', protect, getUserByEmail)
+router.put('/users/:email/update', protect, updateUser);
+router.get('/users/:email/delete', protect, deleteUserByemailId )
+
 
 router.get('/departments/seeAllData', protect, getAllDepartmentsData)
 router.get('/departments/edit_department', protect, editDepartmentPage)

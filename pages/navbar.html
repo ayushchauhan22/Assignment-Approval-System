@@ -1,0 +1,89 @@
+<style>
+  /* Sidebar styles copied from adminDashboard and made robust when injected */
+  /* Left column: absolute so it does not push centered forms on other pages.
+     Pages that want the nav in-flow (like adminDashboard) override this. */
+  #site-nav {
+    width: 200px;
+    background-color: #ffffff;
+    border-right: 1px solid #eaeaea;
+    padding: 40px 15px;
+    box-sizing: border-box;
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    overflow: auto;
+  }
+
+  #site-nav .brand {
+    font-weight: 900;
+    font-size: 1.05rem;
+    margin-bottom: 18px;
+    color: #253237;
+  }
+
+  #site-nav button {
+    display: block;
+    width: 100%;
+    background: #e6e6e6;
+    border: none;
+    padding: 10px 16px;
+    margin-bottom: 12px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    text-align: left;
+    cursor: pointer;
+    color: #253237;
+  }
+
+  #site-nav button:hover {
+    background-color: #d4d4d4;
+  }
+  
+
+  /* Pages that want content pushed should add .page-content { margin-left:220px } */
+
+  /* Small screens: make nav flow on top */
+  @media (max-width: 768px) {
+    #site-nav {
+      position: relative;
+      width: 100%;
+      height: auto;
+      border-right: none;
+      padding: 12px;
+      float: none;
+    }
+
+    #site-nav button {
+      display: inline-block;
+      width: auto;
+      margin-right: 8px;
+    }
+  }
+</style>
+
+<nav id="site-nav">
+  <div class="brand">Admin</div>
+  <div class="nav-links">
+    <button type="button" onclick="window.location.href='/admin/adminDashboard'">Dashboard</button>
+    <button type="button" onclick="window.location.href='/admin/departments'">Departments</button>
+    <button type="button" onclick="window.location.href='/admin/all_UsersPage'">Users</button>
+    <button type="button" onclick="window.location.href='/admin/users/create_route'">Add User</button>
+    <button type="button" onclick="window.location.href='/admin/department/create'">Create Departments</button>
+    <button type="button" onclick="logout()">Logout</button>
+  </div>
+</nav>
+
+<!-- write the logout function here -->
+<script>
+  function logout() {
+    fetch('/auth/logout', { method: 'GET', credentials: 'include' })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          window.location.href = '/auth/login';
+        }
+      })
+      .catch(err => console.error(err));
+  }
+</script>

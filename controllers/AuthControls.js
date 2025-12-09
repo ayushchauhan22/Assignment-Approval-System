@@ -2,6 +2,7 @@ const path = require('path');
 const jwt = require('jsonwebtoken');
 const { hashPasswordSync, verifyPasswordSync } = require('../hashPassword')
 const User = require("../models/UsersSchema");
+const { sendOTPEmail } = require("../emailService")
 
 const showLoginPage = (req, res) => {
     res.sendFile(path.join(__dirname, "../pages/loginPage.html"));
@@ -15,21 +16,24 @@ const autherizeUser = async (req, res) => {
     try {
         const { email, password } = req.body;
         const userFound = await User.findOne({ email });
-
+        
         if (userFound) {
             if (verifyPasswordSync(password, userFound.password)) {
-                const token = jwt.sign({ username: userFound.name, role: userFound.role }, process.env.JWT_KEY, { expiresIn: '5h' })
+                const token = jwt.sign({ userId: userFound._id, role: userFound.role }, process.env.JWT_KEY, { expiresIn: '5h' })
                 res.cookie("jwt", token)
 
-                if (userFound.role == "admin") {
-                    res.redirect('/admin/adminDashboard');
-                }
+                return res.json({
+                    success: true,
+                    role: userFound.role,
+                    message: "Login successful"
+                });
 
             } else {
-                res.redirect('/auth/login/?error=incorrect_password');
+                return res.json({ success: true, message: "incorrect_password" });
             }
         } else {
-            res.redirect('/auth/login/?error=invalid_credentials');
+            return res.json({ success: true, message: "invalid_credentials" });
+
         }
     } catch (error) {
         console.log(error);
@@ -39,12 +43,12 @@ const autherizeUser = async (req, res) => {
 
 const registerUser = async (req, res) => {
     try {
-        const { name, email, password, role, deptId } = req.body;
+        const { name, email, password, role, deptId, phone } = req.body;
 
 
         const existingUser = await User.findOne({ email });
         if (existingUser) {
-            return res.redirect(req.get('referer') + '?error=User_Already_Exist');
+            return res.status(400).json({ success: false, message: "User Already Exist" });
         }
 
         const hashedPassword = hashPasswordSync(password);
@@ -54,16 +58,19 @@ const registerUser = async (req, res) => {
             email: email,
             password: hashedPassword,
             role: role || "student",
+            phone: phone,
+            deptId : deptId
         }
-        if (deptId) {
-            data.deptId = deptId;
-        }
+        // if (deptId) {
+        //     data.;
+        // }
 
         await User.create(data);
+        await sendOTPEmail(email, name, password);
         // const token = jwt.sign({ username: req.body.username, role: "student" }, process.env.JWT_KEY, { expiresIn: '5h' })
 
         // res.cookie("jwt", token)
-        res.redirect(req.get('referer') + '?success=User_Added_successfully');
+        return res.json({ success: true, message: "User created and email sent" });
     }
     catch (error) {
         console.log(error);
@@ -71,9 +78,15 @@ const registerUser = async (req, res) => {
     }
 }
 
+const logout = (req, res) => {
+    res.clearCookie("jwt", { httpOnly: true, secure: false });
+    return res.json({ success: true, message: "Logged out successfully" });
+}
+
 module.exports = {
     showLoginPage,
     showRegisterPage,
     autherizeUser,
-    registerUser
+    registerUser,
+    logout
 };

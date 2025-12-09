@@ -1,6 +1,7 @@
 const Department = require("../models/department");
 const User = require("../models/UsersSchema");
 const path = require('path');
+const { getDepartmentsAggregate } = require('../aggregateFunction');
 
 const showDepartments = async (req, res) => {
     res.sendFile(path.join(__dirname, "../pages/createDepartment.html"));
@@ -13,55 +14,29 @@ const getAllDepartmentsData = async(req,res)=>{
 }
 
 const getDepartments = async (req, res) => {
-    const { page = 1, name  = "", programType ="" } = req.query;
+    const { page = 1, name = "", programType = "" } = req.query;
 
-        const matchStage = {};
+    const matchStage = {};
 
-        if (name) matchStage.name = { $regex: name, $options: "i" };
-        if (programType) matchStage.programType = programType;
-
-        const data = await Department.aggregate([
-        { 
-            $match: matchStage 
-        },
-        {
-            $lookup: {
-                from: "users",
-                localField: "deptId",
-                foreignField: "deptId",
-                as: "userData"
-            }
-        },
-        {
-            $project: {
-                _id: 0,
-                deptId: 1,
-                name: 1,
-                programType: 1,
-                totalUsers: { $size: "$userData" }
-            },
-        },
-        {
-            $skip: ( page - 1 ) * 10 
-        },
-        {
-            $limit: 11
-        }
-    ]);
-    
-    let hasnext = false;
-    if(data.length == 11){
-        hasnext = true
+    if (name) {
+        matchStage.name = { $regex: name, $options: "i" };
     }
 
-    let obj = {
-        "data" : data, 
-        "hasnext" : hasnext
+    if (programType && programType !== "All") {
+        matchStage.programType = programType;
     }
-    
-    res.send(obj);
 
-}
+    const data = await getDepartmentsAggregate(matchStage, page);
+
+    // pagination check
+    const hasnext = data.length === 11;
+
+    res.send({
+        data,
+        hasnext
+    });
+};
+
 
 const viewAllDepartments = (req, res) => {
     res.sendFile(path.join(__dirname, "../pages/viewAllDepartments.html"));

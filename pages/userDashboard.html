@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Assignment Dashboard</title>
+    <style>
+        /* Reset and base */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body,
+        html {
+            height: 100%;
+            background-color: #f7faf7;
+            color: #111827;
+            font-size: 16px;
+        }
+
+        a {
+            text-decoration: none;
+            color: #2563eb;
+            font-weight: 600;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        /* Container with sidebar and main content */
+        .container {
+            display: flex;
+            min-height: 100vh;
+            gap: 24px;
+            padding: 24px;
+        }
+
+
+
+        /* Main content */
+        main.content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            max-width: 700px;
+        }
+
+        main.content h1 {
+            font-weight: 700;
+            font-size: 1.5rem;
+            color: #111827;
+        }
+
+        /* Cards summary */
+        .cards {
+            display: flex;
+            gap: 16px;
+        }
+
+        .card {
+            flex: 1;
+            padding: 20px 16px;
+            border-radius: 12px;
+            color: #111827;
+            box-shadow: 0 0 10px rgb(0 0 0 / 0.05);
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .card label {
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: #374151;
+        }
+
+        .card .count {
+            font-weight: 700;
+            font-size: 1.7rem;
+        }
+
+        /* Card pastel backgrounds */
+        .card.draft {
+            background-color: #e0e7ff;
+        }
+
+        .card.submitted {
+            background-color: #d1fae5;
+        }
+
+        .card.approved {
+            background-color: #f5f7dc;
+        }
+
+        .card.rejected {
+            background-color: #fee2e2;
+        }
+
+        /* Recent Submissions Header */
+        .recent-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 600;
+            font-size: 1rem;
+            color: #111827;
+        }
+
+        button.upload-btn {
+            background-color: #014d4d;
+            border: none;
+            color: white;
+            padding: 8px 20px;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button.upload-btn:hover {
+            background-color: #013737;
+        }
+
+        /* Recent Submissions Table */
+        .submissions {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgb(0 0 0 / 0.1);
+            max-width: 700px;
+            font-weight: 400;
+            /* allow wrapped content instead of clipping long names */
+            overflow: visible;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .submission-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 13px 20px;
+            border-bottom: 1px solid #e7eaf0;
+            font-size: 1rem;
+            color: #111827;
+        }
+
+        /* Make the left column (assignment name) flexible and allow wrapping
+           so long titles won't overflow or vanish. Keep the badge on the right. */
+        .submission-row > div:first-child {
+            flex: 1 1 auto;
+            min-width: 0; /* enables flex child to shrink and wrap */
+            word-break: break-word;
+            overflow-wrap: break-word;
+            white-space: normal;
+            margin-right: 12px;
+        }
+
+        .submission-row:last-child {
+            border-bottom: none;
+        }
+
+        /* Badges using pastel colors with text color variants */
+        .badge {
+            padding: 6px 14px;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            white-space: nowrap;
+            text-align: center;
+        }
+
+        .badge.submitted {
+            background-color: #34d399;
+            /* green */
+            color: white;
+        }
+
+        .badge.approved {
+            background-color: #a3be8c;
+            /* pastel green */
+            color: #2f4f2f;
+        }
+
+        .badge.rejected {
+            background-color: #fca5a5;
+            /* pastel red */
+            color: #7f1d1d;
+        }
+
+        .badge.draft {
+            background-color: #bfdbfe;
+            /* pastel blue */
+            color: #1e40af;
+        }
+
+        /* View All Assignments Link */
+        .view-all {
+            margin-top: 16px;
+            font-weight: 600;
+            color: #2563eb;
+            cursor: pointer;
+            transition: text-decoration 0.2s ease;
+            max-width: 700px;
+        }
+
+        .view-all:hover {
+            text-decoration: underline;
+        }
+
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+
+        .modal.show {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 32px;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            max-width: 500px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .modal-header h2 {
+            margin: 0;
+            font-size: 1.5rem;
+            color: #111827;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #6b7280;
+            padding: 0;
+        }
+
+        .close-btn:hover {
+            color: #111827;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            font-family: inherit;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #014d4d;
+            box-shadow: 0 0 0 3px rgba(1, 77, 77, 0.1);
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .file-input-wrapper input[type="file"] {
+            display: none;
+        }
+
+        .file-label {
+            display: block;
+            padding: 10px 12px;
+            border: 2px dashed #d1d5db;
+            border-radius: 6px;
+            text-align: center;
+            cursor: pointer;
+            background: #f9fafb;
+            transition: border-color 0.2s;
+        }
+
+        .file-label:hover {
+            border-color: #014d4d;
+        }
+
+        .file-name {
+            margin-top: 8px;
+            font-size: 0.875rem;
+            color: #014d4d;
+        }
+
+        .file-size-info {
+            margin-top: 4px;
+            font-size: 0.75rem;
+            color: #6b7280;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 10px 16px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .btn-primary {
+            background-color: #014d4d;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #013737;
+        }
+
+        .btn-secondary {
+            background-color: #e5e7eb;
+            color: #374151;
+        }
+
+        .btn-secondary:hover {
+            background-color: #d1d5db;
+        }
+
+        .alert {
+            padding: 12px 16px;
+            border-radius: 6px;
+            margin-bottom: 16px;
+            font-size: 0.95rem;
+        }
+
+        .alert-error {
+            background-color: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .alert-success {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        /* Responsive - if needed */
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+                padding: 16px;
+            }
+
+            nav.sidebar {
+                width: 100%;
+                flex-direction: row;
+                justify-content: space-evenly;
+                padding: 8px 0;
+            }
+
+            main.content {
+                max-width: 100%;
+            }
+
+            .cards {
+                flex-direction: column;
+            }
+
+            .card {
+                width: 100%;
+            }
+
+            .submissions {
+                max-width: 100%;
+            }
+
+            .view-all {
+                max-width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div id="navbar-placeholder"></div>
+
+        <main class="content" role="main" aria-label="Assignment Dashboard Content">
+            <h1>Assignment Dashboard</h1>
+
+            <section class="cards" aria-label="Assignment status summary">
+                <div class="card draft" aria-live="polite">
+                    <label for="draftCount">Draft</label>
+                    <div class="count" id="draftCount">0</div>
+                </div>
+                <div class="card submitted" aria-live="polite">
+                    <label for="submittedCount">Submitted</label>
+                    <div class="count" id="submittedCount">0</div>
+                </div>
+                <div class="card approved" aria-live="polite">
+                    <label for="approvedCount">Approved</label>
+                    <div class="count" id="approvedCount">0</div>
+                </div>
+                <div class="card rejected" aria-live="polite">
+                    <label for="rejectedCount">Rejected</label>
+                    <div class="count" id="rejectedCount">0</div>
+                </div>
+            </section>
+
+            <section aria-label="Recent submissions section">
+                <div class="recent-header">
+                    <span>Recent Submissions</span>
+                    <button class="upload-btn" id="uploadBtn" type="button">Upload New Assignment</button>
+                </div>
+
+
+                <div class="submissions" role="list" aria-label="Recent assignment submissions">
+                </div>
+
+                <a href="/user/assignmentList" class="view-all" aria-label="View all assignments">View All Assignments →</a>
+            </section>
+        </main>
+    </div>
+    <!-- Uploading overlay shown during file upload -->
+    <div id="uploadingOverlay" role="status" aria-hidden="true" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.45); z-index:9999; align-items:center; justify-content:center;">
+        <div style="background:rgba(0,0,0,0.7); color:#fff; padding:14px 20px; border-radius:8px; display:flex; gap:10px; align-items:center; font-weight:600;">
+            <svg width="20" height="20" viewBox="0 0 50 50" style="animation:spin 1s linear infinite;" aria-hidden="true"><circle cx="25" cy="25" r="20" stroke="#fff" stroke-width="4" fill="none" stroke-linecap="round"></circle></svg>
+            <span>Uploading assignment…</span>
+        </div>
+    </div>
+
+    <style>
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    </style>
+
+    <!-- Upload Assignment Modal -->
+    <div id="uploadModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Upload Assignment</h2>
+                <button class="close-btn" id="closeModal"></button>
+            </div>
+
+            <div id="alertContainer"></div>
+
+            <form id="uploadForm">
+                <div class="form-group">
+                    <label for="title">Assignment Title *</label>
+                    <input type="text" id="title" name="title" required placeholder="e.g., DBMS Project">
+                </div>
+
+                <div class="form-group">
+                    <label for="description">Description</label>
+                    <textarea id="description" name="description" placeholder="Brief description of your assignment"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="category">Category *</label>
+                    <select id="category" name="category" required>
+                        <option value="">Select a category</option>
+                        <option value="Assignment">Assignment</option>
+                        <option value="Thesis">Thesis</option>
+                        <option value="Report">Report</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="file">Upload File (PDF or ZIP, Max 10MB) *</label>
+                    <div class="file-input-wrapper">
+                        <input type="file" id="file" name="file" accept=".pdf,.zip" required>
+                        <label for="file" class="file-label" id="fileLabel">
+                            Click to select PDF or ZIP file
+                        </label>
+                        <div id="fileName" class="file-name"></div>
+                        <div class="file-size-info">Accepted: PDF, ZIP | Maximum size: 10MB</div>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" id="cancelBtn">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="submitBtn">Upload</button>
+                    <button type="button" class="btn btn-secondary" id="bulkUploadLink" style="margin-left: auto;">Bulk Upload →</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const uploadModal = document.getElementById('uploadModal');
+        const uploadForm = document.getElementById('uploadForm');
+        const fileInput = document.getElementById('file');
+        const fileNameDisplay = document.getElementById('fileName');
+        const alertContainer = document.getElementById('alertContainer');
+        const submitBtn = document.getElementById('submitBtn');
+        const cancelBtn = document.getElementById('cancelBtn');
+        const titleInput = document.getElementById('title');
+        const descriptionInput = document.getElementById('description');
+        const categoryInput = document.getElementById('category');
+        const uploadingOverlay = document.getElementById('uploadingOverlay');
+
+        // File input change handler
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const sizeInMB = (file.size / (1024 * 1024)).toFixed(2);
+                fileNameDisplay.textContent = `Selected: ${file.name} (${sizeInMB}MB)`;
+            } else {
+                fileNameDisplay.textContent = '';
+            }
+        });
+
+        // Modal open/close handlers
+        document.getElementById('uploadBtn').addEventListener('click', () => {
+            uploadModal.classList.add('show');
+            uploadForm.reset();
+            fileNameDisplay.textContent = '';
+            alertContainer.innerHTML = '';
+        });
+
+        document.getElementById('closeModal').addEventListener('click', () => {
+            uploadModal.classList.remove('show');
+        });
+
+        document.getElementById('cancelBtn').addEventListener('click', () => {
+            uploadModal.classList.remove('show');
+        });
+
+        document.getElementById('bulkUploadLink').addEventListener('click', () => {
+            uploadModal.classList.remove('show');
+            window.location.href = '/user/assignment/bulkUploadAssignments';
+        });
+
+        // Close modal when clicking outside
+        window.addEventListener('click', (e) => {
+            if (e.target === uploadModal) {
+                uploadModal.classList.remove('show');
+            }
+        });
+
+        // Form submission handler
+        uploadForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            alertContainer.innerHTML = '';
+
+            const title = document.getElementById('title').value.trim();
+            const description = document.getElementById('description').value.trim();
+            const category = document.getElementById('category').value;
+            const file = fileInput.files[0];
+
+            // Validation
+            if (!title) {
+                showAlert('Title is required', 'error');
+                return;
+            }
+
+            if (!category) {
+                showAlert('Please select a category', 'error');
+                return;
+            }
+
+            if (!file) {
+                showAlert('Please select a file', 'error');
+                return;
+            }
+
+            const fileName = file.name.toLowerCase();
+            if (!fileName.endsWith('.pdf') && !fileName.endsWith('.zip')) {
+                showAlert('Only PDF and ZIP files are allowed', 'error');
+                return;
+            }
+
+            const maxSize = 10 * 1024 * 1024; // 10MB
+            if (file.size > maxSize) {
+                showAlert('File size must not exceed 10MB', 'error');
+                return;
+            }
+
+            // Prepare FormData
+            const formData = new FormData();
+            formData.append('title', title);
+            formData.append('description', description);
+            formData.append('category', category);
+            formData.append('file', file);
+
+            // Submit
+            try {
+                // Show uploading overlay and disable form controls to indicate progress
+                if (uploadingOverlay) {
+                    uploadingOverlay.style.display = 'flex';
+                    uploadingOverlay.setAttribute('aria-hidden', 'false');
+                }
+                if (submitBtn) {
+                    submitBtn.disabled = true;
+                    submitBtn.dataset._origText = submitBtn.textContent;
+                    submitBtn.textContent = 'Uploading...';
+                }
+                // Disable other inputs to prevent changes while uploading
+                if (fileInput) fileInput.disabled = true;
+                if (titleInput) titleInput.disabled = true;
+                if (descriptionInput) descriptionInput.disabled = true;
+                if (categoryInput) categoryInput.disabled = true;
+                if (cancelBtn) cancelBtn.disabled = true;
+
+                const res = await fetch('/user/assignment/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await res.json();
+
+                if (data.success) {
+                    showAlert(`Success! Assignment ID: ${data.assignmentId}`, 'success');
+                    setTimeout(() => {
+                        uploadModal.classList.remove('show');
+                        // Reload assignments
+                        location.reload();
+                    }, 2000);
+                } else {
+                    showAlert(data.message || 'Upload failed', 'error');
+                }
+            } catch (error) {
+                console.error('Upload error:', error);
+                showAlert('Error uploading assignment', 'error');
+            } finally {
+                // Hide uploading overlay and restore controls
+                if (uploadingOverlay) {
+                    uploadingOverlay.style.display = 'none';
+                    uploadingOverlay.setAttribute('aria-hidden', 'true');
+                }
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = submitBtn.dataset._origText || 'Upload';
+                    delete submitBtn.dataset._origText;
+                }
+                if (fileInput) fileInput.disabled = false;
+                if (titleInput) titleInput.disabled = false;
+                if (descriptionInput) descriptionInput.disabled = false;
+                if (categoryInput) categoryInput.disabled = false;
+                if (cancelBtn) cancelBtn.disabled = false;
+            }
+        });
+
+        function showAlert(message, type) {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type}`;
+            alertDiv.textContent = message;
+            alertContainer.innerHTML = '';
+            alertContainer.appendChild(alertDiv);
+        }
+
+        // Load navbar dynamically (use absolute path so fetch resolves correctly)
+        fetch('/usernavbar.html')
+            .then(response => response.text())
+            .then(data => {
+                document.getElementById('navbar-placeholder').innerHTML = data;
+            })
+            .catch(err => console.error('Error loading navbar:', err));
+
+        // Function to render a single submission row
+        function renderSubmissionRow(assignmentName, status) {
+            const badgeClass = status.toLowerCase();
+            const row = document.createElement('div');
+            row.setAttribute('class', 'submission-row');
+            row.setAttribute('role', 'listitem');
+            row.innerHTML = `
+                <div>${assignmentName}</div>
+                <div class="badge ${badgeClass}" aria-label="Status ${status}">${status}</div>
+            `;
+            return row;
+        }
+
+        // Fetch recent 5 assignments
+        fetch("/user/assignment/recent")
+            .then((res) => res.json())
+            .then((data) => {
+                console.table(data);
+                const submissionsContainer = document.querySelector('.submissions');
+                submissionsContainer.innerHTML = ''; // Clear existing content
+
+                if (!data || data.length === 0) {
+                    submissionsContainer.innerHTML = '<div style="padding: 13px 20px; color: #6b7280;">No recent assignments.</div>';
+                    return;
+                }
+
+                // Render up to 5 recent assignments
+                data.slice(0, 5).forEach(assignment => {
+                    const row = renderSubmissionRow(assignment.title, assignment.status);
+                    submissionsContainer.appendChild(row);
+                });
+            })
+            .catch((err) => {
+                console.error("Error fetching recent assignments:", err);
+                const submissionsContainer = document.querySelector('.submissions');
+                submissionsContainer.innerHTML = '<div style="padding: 13px 20px; color: #dc2626;">Error loading assignments.</div>';
+            });
+
+        const uploadBtn = document.getElementById('uploadBtn');
+
+        fetch("/user/assignment/assignment_details")
+            .then((res) => res.json())
+            .then((data) => {
+
+                data.forEach(element => {
+                    if (element._id == "draft") {
+                        document.getElementById("draftCount").innerText = element.total || 0;
+                    }
+                    else if (element._id == "submitted") {
+                        document.getElementById("submittedCount").innerText = element.total || 0;
+                    }
+                    else if (element._id == "approved") {
+                        document.getElementById("approvedCount").innerText = element.total;
+                    }
+                    else if (element._id == "rejected") {
+                        document.getElementById("rejectedCount").innerText = element.total;
+                    }
+
+                });
+            })
+            .catch((err) => {
+                console.log("fetch err");
+            })
+
+        function logout() {
+            fetch("/auth/logout", {
+                method: "GET",
+                credentials: "include"
+            })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        window.location.href = "/auth/login";
+                    }
+                })
+                .catch(err => console.error("Logout error:", err));
+        }
+
+    </script>
+</body>
+
+</html>

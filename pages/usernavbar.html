@@ -1,0 +1,88 @@
+<style>
+/* Sidebar Navigation */
+nav.sidebar {
+    width: 180px;
+    background-color: #f3f4f6;
+    border-radius: 8px;
+    padding: 16px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    font-weight: 600;
+    color: #374151;
+    box-shadow: 0 1px 2px rgb(0 0 0 / 0.05);
+}
+
+nav.sidebar button {
+    background-color: #f9fafb;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    cursor: pointer;
+    text-align: left;
+    color: #374151;
+    font-weight: 600;
+    transition: background-color 0.2s ease;
+}
+
+nav.sidebar button.active,
+nav.sidebar button:hover {
+    background-color: #e5e7eb;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    nav.sidebar {
+        width: 100%;
+        flex-direction: row;
+        justify-content: space-evenly;
+        padding: 8px 0;
+    }
+}
+
+/* When navbar is placed inside a content card (like assignment list), render it as a horizontal top nav */
+.card > nav.sidebar,
+.page > .card > nav.sidebar,
+.card nav.sidebar {
+  width: 100%;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 12px;
+  padding: 8px 12px;
+  box-shadow: none;
+  background-color: transparent;
+}
+
+.card > nav.sidebar button,
+.card nav.sidebar button {
+  background-color: transparent;
+  padding: 6px 10px;
+  border-radius: 6px;
+  color: #374151;
+}
+
+.card > nav.sidebar button.active,
+.card nav.sidebar button.active {
+  background-color: #e5e7eb;
+}
+</style>
+
+<nav class="sidebar" aria-label="Primary Navigation">
+    <button class="active" type="button" onclick="window.location.href='/user/userDashboard'">Dashboard</button>
+    <button type="button" onclick="window.location.href='/user/assignmentList'">All Assignments</button>
+    <button type="button">Profile</button>
+    <button type="button" onclick="logout()">Logout</button>
+</nav>
+<script>
+  function logout() {
+    fetch('/auth/logout', { method: 'GET', credentials: 'include' })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          window.location.href = '/auth/login';
+        }
+      })
+      .catch(err => console.error(err));
+  }
+</script>

@@ -127,10 +127,18 @@
                 font-size: 24px;
             }
         }
+
+        @media (min-width: 769px) {
+            /* reserve space for left navbar so form stays visually centered within remaining area */
+            .container { margin-left: 220px; }
+        }
     </style>
 </head>
 
 <body>
+
+    <div id="navbar"></div>  
+
     <div class="container">
         <div class="form-container">
             <form class="form" id="registerForm">
@@ -147,6 +155,13 @@
                     <input type="email" id="email" name="email" required>
                     <div id="email-error" class="field-error" style="display: none; color: red; font-size: 14px;"></div>
                 </div>
+
+                <!-- under maintainance -->
+                <div class="input-group">
+                    <label for="phone">Phone</label>
+                    <input type="number" id="phone" name="phone" required>
+                    <div id="phone-error" class="field-error" style="display: none; color: red; font-size: 14px;"></div>
+                </div>
                 <div class="input-group">
                     <label for="password">Password</label>
                     <input type="password" id="password" name="password" required>
@@ -162,8 +177,8 @@
                 <div class="input-group">
                     <label for="role">role</label>
                     <select id="role">
-                        <option value="Student">Student</option>
-                        <option value="Professor">Professor</option>
+                        <option value="student">Student</option>
+                        <option value="professor">Professor</option>
                         <option value="HOD">HOD</option>
                     </select>
                 </div>
@@ -179,6 +194,12 @@
             .then((data) => {
                 renderOption(data)
             })
+
+        fetch("/navbar.html")
+            .then(response => response.text())
+            .then(data => {
+                document.getElementById("navbar").innerHTML = data;
+            });
 
 
         function renderOption(data) {
@@ -247,6 +268,8 @@
                 hasError = true;
             }
 
+
+
             if (!hasError) {
                 fetch("/auth/registerData", {
                     method: "POST",
@@ -258,40 +281,42 @@
                         email: document.getElementById("email").value,
                         password: document.getElementById("password").value,
                         role: document.getElementById('role').value,
-                        deptId: document.getElementById('department').value
+                        deptId: document.getElementById('department').value,
+                        phone: document.getElementById("phone").value
                     })
                 })
-                    .then(res => window.location.href = res.url)
-                    .catch(err => console.error(err));
+                    .then(res => res.json())
+                    .then(data => {
+                        const msg = document.getElementById("error-message");
+
+                        if (data.success) {
+                            msg.textContent = data.message;
+                            msg.style.color = "green";
+                            msg.style.display = "block";
+
+                            // CLEAR FIELDS
+                            document.getElementById("name").value = "";
+                            document.getElementById("email").value = "";
+                            document.getElementById("password").value = "";
+                        } else {
+                            msg.textContent = data.message;
+                            msg.style.color = "red";
+                            msg.style.display = "block";
+                        }
+                    })
+                    .catch(err => {
+                        const msg = document.getElementById("error-message");
+                        msg.textContent = "Server error. Try again.";
+                        msg.style.color = "red";
+                        msg.style.display = "block";
+                        console.log(err);
+                    });
 
             }
         });
 
 
 
-        const urlParams = new URLSearchParams(window.location.search);
-        const error = urlParams.get('error');
-        const success = urlParams.get('success');
-
-        if (error) {
-            const errorMessage = document.getElementById('error-message');
-            if (error === 'User_Already_Exist') {
-                errorMessage.textContent = 'User Already Exist. Please use another one.';
-            } else if (error === 'invalid_credentials') {
-                errorMessage.textContent = 'Invalid credentials. Please check your email.';
-            } else {
-                errorMessage.textContent = error;
-            }
-            errorMessage.style.color = 'red';
-            errorMessage.style.display = 'block';
-        }
-
-        if (success) {
-            const errorMessage = document.getElementById('error-message');
-            errorMessage.textContent = 'Registration successful!';
-            errorMessage.style.color = 'green';
-            errorMessage.style.display = 'block';
-        }
 
         // Hide top error when typing
         document.getElementById('name').addEventListener('input', () => {

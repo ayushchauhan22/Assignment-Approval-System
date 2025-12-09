@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Bulk Upload Assignments</title>
+    <style>
+        /* Reset and base */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body,
+        html {
+            height: 100%;
+            background-color: #f7faf7;
+            color: #111827;
+            font-size: 16px;
+        }
+
+        a {
+            text-decoration: none;
+            color: #2563eb;
+            font-weight: 600;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        /* Container with sidebar and main content */
+        .container {
+            display: flex;
+            min-height: 100vh;
+            gap: 24px;
+            padding: 24px;
+        }
+
+        /* Main content */
+        main.content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            max-width: 700px;
+        }
+
+        main.content h1 {
+            font-weight: 700;
+            font-size: 1.5rem;
+            color: #111827;
+        }
+
+        /* Section styling */
+        section {
+            background: white;
+            padding: 24px;
+            border-radius: 12px;
+            box-shadow: 0 0 10px rgb(0 0 0 / 0.05);
+        }
+
+        section h2 {
+            font-weight: 700;
+            font-size: 1.1rem;
+            margin-bottom: 16px;
+            color: #111827;
+        }
+
+        /* Form styling */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #374151;
+        }
+
+        .form-group input[type="text"],
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 1rem;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .form-group input[type="text"]:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        /* File upload wrapper */
+        .file-input-wrapper {
+            position: relative;
+            border: 2px dashed #d1d5db;
+            border-radius: 8px;
+            padding: 24px;
+            text-align: center;
+            background-color: #f9fafb;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .file-input-wrapper:hover {
+            border-color: #2563eb;
+            background-color: #f0f9ff;
+        }
+
+        .file-input-wrapper input[type="file"] {
+            display: none;
+        }
+
+        .file-label {
+            font-weight: 600;
+            color: #2563eb;
+            cursor: pointer;
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        .file-list li {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 12px;
+            align-items: start;
+            padding: 12px;
+            background-color: #f3f4f6;
+            border-radius: 6px;
+            margin: 8px;
+            font-size: 0.95rem;
+            /* allow variable height when filename wraps */
+            min-height: 48px;
+        }
+
+        /* Ensure filename block can shrink and wrap inside grid */
+        .file-list li > div:first-child {
+            min-width: 0;
+            word-break: break-word;
+            overflow-wrap: break-word;
+        }
+
+        /* Keep the remove button in the right column; center when single-line, top when multiline */
+        .file-list li button {
+            grid-column: 2;
+            grid-row: 1;
+            align-self: center; /* center when filename fits on one line */
+            justify-self: end;
+            flex-shrink: 0;
+            white-space: nowrap;
+        }
+
+        /* When filename wraps, pin the button to the top */
+        .file-list li.multiline button {
+            align-self: start;
+        }
+        .file-list li.error {
+            background-color: #fee2e2;
+            color: #991b1b;
+        }
+
+        .file-list li.success {
+            background-color: #dcfce7;
+            color: #166534;
+        }
+
+        .file-list button {
+            background: none;
+            border: none;
+            color: #dc2626;
+            cursor: pointer;
+            font-weight: 600;
+            padding: 4px 8px;
+        }
+
+        .file-list button:hover {
+            text-decoration: underline;
+        }
+
+        /* Alert styling */
+        .alert {
+            padding: 12px 16px;
+            border-radius: 6px;
+            margin-bottom: 16px;
+            font-weight: 500;
+        }
+
+        .alert.error {
+            background-color: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .alert.success {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .alert.info {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        /* Button styling */
+        .btn {
+            padding: 10px 16px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 1rem;
+        }
+
+        .btn-primary {
+            background-color: #2563eb;
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background-color: #1d4ed8;
+        }
+
+        .btn-secondary {
+            background-color: #e5e7eb;
+            color: #111827;
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            background-color: #d1d5db;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+        }
+
+        /* Summary section */
+        .summary {
+            margin-top: 24px;
+            padding: 16px;
+            background-color: #f9fafb;
+            border-radius: 8px;
+        }
+
+        .summary h3 {
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: #111827;
+        }
+
+        .summary-item {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 12px;
+            align-items: center;
+            padding: 12px;
+            background-color: white;
+            border-radius: 6px;
+            margin: 8px;
+            border-left: 4px solid #2563eb;
+        }
+
+        /* Ensure filename block wraps inside summary item */
+        .summary-item > div:first-child {
+            min-width: 0;
+            word-break: break-word;
+            overflow-wrap: break-word;
+        }
+
+        .summary-item > span {
+            justify-self: end;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .summary-item.success {
+            border-left-color: #16a34a;
+        }
+
+        .summary-item.error {
+            border-left-color: #dc2626;
+        }
+
+        .summary-meta {
+            font-size: 0.875rem;
+            color: #6b7280;
+        }
+
+        /* Loading overlay */
+        .upload-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.45);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .upload-overlay.show {
+            display: flex;
+        }
+
+        .upload-overlay-content {
+            background: rgba(0, 0, 0, 0.7);
+            color: #fff;
+            padding: 20px 28px;
+            border-radius: 8px;
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            font-weight: 600;
+        }
+
+        .spinner {
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* Back button */
+        .back-link {
+            display: inline-block;
+            margin-bottom: 16px;
+            color: #2563eb;
+            font-weight: 600;
+            text-decoration: none;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+                padding: 16px;
+            }
+
+            main.content {
+                max-width: 100%;
+            }
+
+            .btn-group {
+                flex-direction: column;
+            }
+
+            .btn-group button {
+                width: 100%;
+            }
+        }
+
+        .file-count-display {
+            font-size: 0.875rem;
+            color: #6b7280;
+            margin-top: 4px;
+        }
+
+        /* Results summary inline styling */
+        .results-summary {
+            display: flex;
+            grid-template-columns: 1fr auto;
+            flex-direction: column;
+            padding: 12px;
+            background-color: #f9fafb;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+        }
+
+        .results-summary-header {
+            font-weight: 600;
+            margin-bottom: 12px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .results-summary-header.success {
+            color: #16a34a;
+        }
+
+        .results-summary-header.error {
+            color: #dc2626;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <!-- Navbar placeholder -->
+        <div id="navbar-placeholder"></div>
+
+        <main class="content">
+            <h1>Bulk Upload Assignments</h1>
+
+            <section>
+                <h2>Upload Settings</h2>
+
+                <div class="form-group">
+                    <label for="bulkCategory">Category *</label>
+                    <select id="bulkCategory" name="bulkCategory" required>
+                        <option value="">Select a category</option>
+                        <option value="Assignment">Assignment</option>
+                        <option value="Thesis">Thesis</option>
+                        <option value="Report">Report</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="bulkDescription">Common Description (Optional)</label>
+                    <textarea id="bulkDescription" name="bulkDescription" placeholder="Description applies to all files"></textarea>
+                </div>
+
+                <div id="alertContainer"></div>
+
+                <h2 style="margin-top: 24px;">Select Files</h2>
+                <p style="color: #6b7280; font-size: 0.95rem; margin-bottom: 12px;">Select up to 5 PDF or ZIP files (max 10MB each). Each file will be created as a separate assignment with the same category and description.</p>
+
+                <div class="file-input-wrapper" id="fileDropZone">
+                    <input type="file" id="bulkFiles" name="bulkFiles" accept=".pdf,.zip" multiple required>
+                    <label for="bulkFiles" class="file-label">Click to select files or drag & drop</label>
+                    <div class="file-size-info">Accepted: PDF, ZIP | Maximum size: 10MB per file</div>
+                </div>
+
+                <ul class="file-list" id="fileList"></ul>
+                <div class="file-count-display" id="fileCountDisplay"></div>
+
+                <!-- Results summary shown inline after upload -->
+                <div class="results-summary" id="resultsSummary" style="display: none; margin-top: 16px; max-height: 300px; overflow-y: auto;"></div>
+
+                <div class="btn-group" id="buttonGroup">
+                    <button type="button" class="btn btn-secondary" onclick="window.location.href='/user/userDashboard'">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="uploadBtn">Upload All Files</button>
+                </div>
+
+                <div class="btn-group" id="completeButtonGroup" style="display: none;">
+                    <button type="button" class="btn btn-secondary" onclick="window.location.href='/user/userDashboard'">Back to Dashboard</button>
+                    <button type="button" class="btn btn-primary" onclick="window.location.reload()">Upload More</button>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Loading overlay -->
+    <div class="upload-overlay" id="uploadOverlay">
+        <div class="upload-overlay-content">
+            <svg class="spinner" viewBox="0 0 50 50" aria-hidden="true">
+                <circle cx="25" cy="25" r="20" stroke="#fff" stroke-width="4" fill="none" stroke-linecap="round"></circle>
+            </svg>
+            <span id="overlayText">Uploading files…</span>
+        </div>
+    </div>
+
+    <script>
+        const fileInput = document.getElementById('bulkFiles');
+        const fileList = document.getElementById('fileList');
+        const fileCountDisplay = document.getElementById('fileCountDisplay');
+        const uploadBtn = document.getElementById('uploadBtn');
+        const bulkCategory = document.getElementById('bulkCategory');
+        const bulkDescription = document.getElementById('bulkDescription');
+        const alertContainer = document.getElementById('alertContainer');
+        const uploadOverlay = document.getElementById('uploadOverlay');
+        const overlayText = document.getElementById('overlayText');
+        const resultsSummary = document.getElementById('resultsSummary');
+        const fileDropZone = document.getElementById('fileDropZone');
+        const buttonGroup = document.getElementById('buttonGroup');
+        const completeButtonGroup = document.getElementById('completeButtonGroup');
+
+        const MAX_FILES = 5;
+        const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+        let selectedFiles = [];
+
+        // Drag & drop handlers
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            fileDropZone.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            fileDropZone.addEventListener(eventName, () => {
+                fileDropZone.style.borderColor = '#2563eb';
+                fileDropZone.style.backgroundColor = '#f0f9ff';
+            });
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            fileDropZone.addEventListener(eventName, () => {
+                fileDropZone.style.borderColor = '#d1d5db';
+                fileDropZone.style.backgroundColor = '#f9fafb';
+            });
+        });
+
+        fileDropZone.addEventListener('drop', (e) => {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            fileInput.files = files;
+            handleFileSelect({ target: { files } });
+        });
+
+        // File selection handler
+        fileInput.addEventListener('change', handleFileSelect);
+
+        function handleFileSelect(e) {
+            const files = Array.from(e.target.files);
+
+            // Validate number of files
+            if (files.length > MAX_FILES) {
+                showAlert(`Maximum ${MAX_FILES} files allowed`, 'error');
+                fileInput.value = '';
+                selectedFiles = [];
+                renderFileList();
+                return;
+            }
+
+            // Validate each file
+            selectedFiles = files.filter(file => {
+                const fileName = file.name.toLowerCase();
+                const isValidType = fileName.endsWith('.pdf') || fileName.endsWith('.zip');
+                const isValidSize = file.size <= MAX_FILE_SIZE;
+
+                if (!isValidType) {
+                    showAlert(`"${file.name}" is not a PDF or ZIP file`, 'error');
+                    return false;
+                }
+
+                if (!isValidSize) {
+                    showAlert(`"${file.name}" exceeds 10MB limit`, 'error');
+                    return false;
+                }
+
+                return true;
+            });
+
+            renderFileList();
+        }
+
+        function renderFileList() {
+            fileList.innerHTML = '';
+            fileCountDisplay.innerHTML = '';
+
+            if (selectedFiles.length === 0) {
+                return;
+            }
+
+            selectedFiles.forEach((file, index) => {
+                const li = document.createElement('li');
+                const sizeInMB = (file.size / (1024 * 1024)).toFixed(2);
+                li.innerHTML = `
+                    <div>
+                        <strong>${file.name}</strong>
+                        <div class="file-size-info">${sizeInMB}MB</div>
+                    </div>
+                    <button type="button" onclick="removeFile(${index})">Remove</button>
+                `;
+                fileList.appendChild(li);
+
+                // detect if the filename wrapped to multiple lines and add a class
+                try {
+                    const nameEl = li.querySelector('strong');
+                    const cs = window.getComputedStyle(nameEl);
+                    const lineHeight = parseFloat(cs.lineHeight) || parseFloat(cs.fontSize) * 1.2;
+                    if (nameEl.offsetHeight > lineHeight * 1.05) {
+                        li.classList.add('multiline');
+                    } else {
+                        li.classList.remove('multiline');
+                    }
+                } catch (e) {
+                    // if measurement fails (e.g., server-side), do nothing
+                }
+            });
+
+            fileCountDisplay.textContent = `${selectedFiles.length} file${selectedFiles.length !== 1 ? 's' : ''} selected`;
+        }
+
+        function removeFile(index) {
+            selectedFiles.splice(index, 1);
+            fileInput.value = '';
+            renderFileList();
+        }
+
+        uploadBtn.addEventListener('click', async () => {
+            alertContainer.innerHTML = '';
+
+            // Validation
+            if (!bulkCategory.value) {
+                showAlert('Please select a category', 'error');
+                return;
+            }
+
+            if (selectedFiles.length === 0) {
+                showAlert('Please select at least one file', 'error');
+                return;
+            }
+
+            await performBulkUpload();
+        });
+
+        async function performBulkUpload() {
+            const category = bulkCategory.value;
+            const description = bulkDescription.value.trim();
+
+            uploadOverlay.classList.add('show');
+            overlayText.textContent = `Uploading 1 of ${selectedFiles.length}...`;
+            uploadBtn.disabled = true;
+
+            const results = [];
+            let successCount = 0;
+            let errorCount = 0;
+
+            for (let i = 0; i < selectedFiles.length; i++) {
+                const file = selectedFiles[i];
+                overlayText.textContent = `Uploading ${i + 1} of ${selectedFiles.length}...`;
+
+                try {
+                    const formData = new FormData();
+                    // Use filename (without extension) as title for bulk upload
+                    const fileTitle = file.name.substring(0, file.name.lastIndexOf('.')) || file.name;
+                    formData.append('title', fileTitle);
+                    formData.append('description', description);
+                    formData.append('category', category);
+                    formData.append('file', file);
+
+                    const res = await fetch('/user/assignment/upload', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    const data = await res.json();
+
+                    if (data.success) {
+                        results.push({
+                            fileName: file.name,
+                            success: true,
+                            assignmentId: data.assignmentId,
+                            fileUrl: data.fileUrl
+                        });
+                        successCount++;
+                    } else {
+                        results.push({
+                            fileName: file.name,
+                            success: false,
+                            error: data.message || 'Upload failed'
+                        });
+                        errorCount++;
+                    }
+                } catch (error) {
+                    console.error('Upload error:', error);
+                    results.push({
+                        fileName: file.name,
+                        success: false,
+                        error: 'Network error'
+                    });
+                    errorCount++;
+                }
+            }
+
+            uploadOverlay.classList.remove('show');
+            uploadBtn.disabled = false;
+
+            // Show results
+            showResults(results, successCount, errorCount);
+        }
+
+        function showResults(results, successCount, errorCount) {
+            // Clear previous results
+            resultsSummary.innerHTML = '';
+
+            // Add header with status
+            const headerDiv = document.createElement('div');
+            headerDiv.className = `results-summary-header ${errorCount === 0 ? 'success' : 'error'}`;
+            headerDiv.innerHTML = `<strong>${successCount} of ${results.length} files uploaded successfully</strong>${errorCount > 0 ? ` (${errorCount} failed)` : ''}`;
+            resultsSummary.appendChild(headerDiv);
+
+            // Add each result
+            results.forEach(result => {
+                const div = document.createElement('div');
+                div.className = `summary-item ${result.success ? 'success' : 'error'}`;
+                if (result.success) {
+                    div.innerHTML = `
+                        <div>
+                            <strong>${result.fileName}</strong>
+                            <div class="summary-meta">ID: ${result.assignmentId}</div>
+                        </div>
+                        <span style="color: #16a34a; font-weight: 600;">✓</span>
+                    `;
+                } else {
+                    div.innerHTML = `
+                        <div>
+                            <strong>${result.fileName}</strong>
+                            <div class="summary-meta">${result.error}</div>
+                        </div>
+                        <span style="color: #dc2626; font-weight: 600;">✗</span>
+                    `;
+                }
+                resultsSummary.appendChild(div);
+            });
+
+            // Show results and update button groups
+            resultsSummary.style.display = 'block';
+            buttonGroup.style.display = 'none';
+            completeButtonGroup.style.display = 'flex';
+
+            // Scroll to results
+            resultsSummary.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        function showAlert(message, type) {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert ${type}`;
+            alertDiv.textContent = message;
+            alertContainer.innerHTML = '';
+            alertContainer.appendChild(alertDiv);
+        }
+
+        // Load navbar dynamically
+        fetch('/usernavbar.html')
+            .then(response => response.text())
+            .then(data => {
+                document.getElementById('navbar-placeholder').innerHTML = data;
+            })
+            .catch(err => console.error('Error loading navbar:', err));
+    </script>
+</body>
+
+</html>

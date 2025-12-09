@@ -119,38 +119,40 @@
       text-align: center;
       border-top: 1px solid #eaeaea;
     }
+
+    /* When navbar is injected as #site-nav we want it in-flow for this page */
+    #navbar #site-nav {
+      position: relative !important;
+      float: left !important;
+      min-height: auto !important;
+    }
   </style>
 </head>
 
 <body>
   <header>Admin Dashboard</header>
   <div class="container">
-    <nav>
-      <h3>Navigation</h3>
-      <button type="button" onclick="openDepartments()">Departments</button>
-      <button type="button">Users</button>
-      <button type="button" onclick="createUser()">Add User</button>
-      <button type="button" onclick="createDepartments()">Create Departments</button>
 
-    </nav>
+    <!-- NavBar -->
+    <div id="navbar"></div>  
     <main>
       <h2>Dashboard Overview</h2>
       <div class="cards">
         <div class="card departments">
           <div>Total Departments</div>
-          <strong id="departments"></strong>
+          <strong id="departments">0</strong>
         </div>
         <div class="card students">
           <div>Total Students</div>
-          <strong id="students"></strong>
+          <strong id="students">0</strong>
         </div>
         <div class="card professors">
           <div>Total Professors</div>
-          <strong id="professors"></strong>
+          <strong id="professors">0</strong>
         </div>
         <div class="card hods">
           <div>Total HODs</div>
-          <strong id="hods"></strong>
+          <strong id="hods">0</strong>
         </div>
       </div>
     </main>
@@ -170,32 +172,60 @@
     .then((data) => {
       data.forEach(element => {
         if (element._id == "student") {
-          studentsCount.innerText = element.total;
+          studentsCount.innerText = element.total || 0;
         }
         else if (element._id == "professor") {
-          professorsCount.innerText = element.total;
+          professorsCount.innerText = element.total || 0;
         }
         else if (element._id == "HOD") {
           hodsCount.innerText = element.total;
         }
-          departmentsCount.innerText = element.totalDepartments;
+        departmentsCount.innerText = element.totalDepartments;
       });
     })
     .catch((err) => {
       console.log(err);
     })
 
-    function openDepartments(){
-       window.location.href = "/admin/departments";
-    }
 
-    function createDepartments(){
-      window.location.href = "/admin/department/create";
-    }
+  fetch("/navbar.html")
+    .then(response => response.text())
+    .then(data => {
+      document.getElementById("navbar").innerHTML = data;
+      document.body.classList.add('has-sidebar');
+    });
 
-    function createUser(){
-      window.location.href = "/admin/users/create_route";
-    }
+
+
+  function logout() {
+    fetch("/auth/logout", {
+      method: "GET",
+      credentials: "include"
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          window.location.href = "/auth/login";
+        }
+      })
+      .catch(err => console.error("Logout error:", err));
+  }
+
+  function openDepartments() {
+    window.location.href = "/admin/departments";
+  }
+
+  function createDepartments() {
+    window.location.href = "/admin/department/create";
+  }
+
+  function createUser() {
+    window.location.href = "/admin/users/create_route";
+  }
+
+  function showUserList() {
+    window.location.href = "/admin/all_UsersPage";
+  }
 </script>
 
 </html>

@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Assignment Details</title>
+    <style>
+        body {
+            font-family: Segoe UI, system-ui, -apple-system, 'Helvetica Neue', Arial;
+            background: #f7faf7;
+            color: #111827;
+            padding: 20px
+        }
+
+        .card {
+            background: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            max-width: 800px;
+            margin: 0 auto;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.06)
+        }
+
+        h1 {
+            font-size: 1.25rem;
+            margin-bottom: 8px
+        }
+
+        .meta {
+            color: #6b7280;
+            margin-bottom: 12px
+        }
+
+        .section {
+            margin-top: 12px
+        }
+
+        .file-link {
+            color: #2563eb;
+            font-weight: 600
+        }
+
+        .badge {
+            display: inline-flex;
+            padding: 6px 10px;
+            border-radius: 999px;
+            font-weight: 700
+        }
+    </style>
+</head>
+
+<body>
+    <div class="card" id="detailsCard">
+        <h1 id="title">Loading…</h1>
+        <div class="meta" id="meta">&nbsp;</div>
+        <div class="section" id="description"></div>
+        <div class="section" id="fileUrl"></div>
+        <div class="section" id="more"></div>
+        <div style="margin-top:16px"><a href="/user/assignmentList">← Back to assignments</a></div>
+    </div>
+
+    <script>
+        function qs(name) {
+            const params = new URLSearchParams(window.location.search);
+            return params.get(name);
+        }
+        let id = qs('id');
+        if (!id) {
+            document.getElementById('title').textContent = 'No assignment specified';
+        } else {
+            id = String(id).trim();
+            // if id doesn't look like an objectId, show friendly message instead of fetching
+            if (id.length !== 24 || !/^[0-9a-fA-F]+$/.test(id)) {
+                document.getElementById('title').textContent = 'Invalid assignment id';
+            } else {
+                fetch(`/user/assignment/${id}`, { credentials: 'same-origin' })
+                    .then(async r => {
+                        const data = await r.json().catch(() => null);
+                        if (!r.ok) {
+                            // Show server-provided message where available
+                            const msg = data && data.message ? data.message : (r.statusText || 'Error fetching assignment');
+                            document.getElementById('title').textContent = msg;
+                            return;
+                        }
+
+                        if (data && data._id) {
+                            document.getElementById('title').textContent = data.title || 'Untitled';
+                            const meta = `${data.category || ''} • ${new Date(data.createdAt).toLocaleString()}`;
+                            document.getElementById('meta').textContent = meta;
+                            document.getElementById('description').textContent = data.description || '';
+                            if (data.fileUrl) {
+                                const a = document.createElement('a');
+                                a.href = data.fileUrl; a.target = '_blank'; a.className = 'file-link';
+                                a.textContent = data.fileName || 'Download file';
+                                document.getElementById('fileUrl').appendChild(a);
+                            }
+                            const more = document.getElementById('more');
+                            more.innerHTML = `<div>Status: <strong>${data.status}</strong></div>`;
+                        } else {
+                            document.getElementById('title').textContent = 'Assignment not found';
+                        }
+                    }).catch(err => {
+                        console.error(err);
+                        document.getElementById('title').textContent = 'Error loading assignment';
+                    });
+            }
+        }
+    </script>
+</body>
+
+</html>

@@ -132,10 +132,17 @@
                 font-size: 24px;
             }
         }
+
+        @media (min-width: 769px) {
+            /* reserve space for left navbar so form stays visually centered within remaining area */
+            .container { margin-left: 220px; }
+        }
     </style>
 </head>
 
 <body>
+    <div id="navbar"></div>
+
     <div class="container">
         <div class="form-container">
             <form class="form" id="registerForm">
@@ -210,7 +217,11 @@
 
         });
 
-
+        fetch("/navbar.html")
+            .then(response => response.text())
+            .then(data => {
+                document.getElementById("navbar").innerHTML = data;
+            });
     </script>
 </body>
 
